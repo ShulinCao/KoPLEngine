@@ -210,6 +210,9 @@ KoPL_BINARY_DIR:STATIC=/Users/zijun/Documents/KoPL/Engine/cmake-build-debug
 //Value Computed by CMake
 KoPL_IS_TOP_LEVEL:STATIC=ON
 
+//Dependencies for the target
+KoPL_LIB_DEPENDS:STATIC=general;/usr/local/Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib;
+
 //Value Computed by CMake
 KoPL_SOURCE_DIR:STATIC=/Users/zijun/Documents/KoPL/Engine
 
