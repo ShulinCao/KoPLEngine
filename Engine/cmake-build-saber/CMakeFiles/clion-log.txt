@@ -1,0 +1,5 @@
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Release -G "CodeBlocks - Unix Makefiles" /data/zijun/engine
+/home/user/workspace/json/build
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /data/zijun/engine

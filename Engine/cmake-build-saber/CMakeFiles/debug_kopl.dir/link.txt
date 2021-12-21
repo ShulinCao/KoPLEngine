@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/debug_kopl.dir/engine.cpp.o CMakeFiles/debug_kopl.dir/main.cpp.o  -o debug_kopl /usr/lib/x86_64-linux-gnu/libpython3.6m.so 
