@@ -35,6 +35,45 @@ typedef struct _Relation{
 } Relation;
 
 
+class RelationIndex {
+public:
+    std::string                                                 relation_name;
+    RelationDirection                                           relation_direction;
+    friend bool operator< (const RelationIndex & a, const RelationIndex & b) {
+        if (a.relation_direction < b.relation_direction) {
+            return true;
+        }
+        else if (a.relation_direction == b.relation_direction) {
+            return a.relation_name < b.relation_name;
+        }
+        return false;
+    }
+    explicit RelationIndex(const std::string & rel_name, const RelationDirection & rel_dir):
+        relation_name(rel_name), relation_direction(rel_dir) {};
+    RelationIndex(const RelationIndex & rel):
+        relation_name(rel.relation_name), relation_direction(rel.relation_direction) {
+    };
+};
+
+class EntityPairIndex {
+public:
+    int                                                         head_entity;
+    int                                                         tail_entity;
+    friend bool operator< (const EntityPairIndex & a, const EntityPairIndex & b) {
+        if (a.head_entity < b.head_entity) {
+            return true;
+        }
+        else if (a.head_entity == b.head_entity) {
+            return a.tail_entity < b.tail_entity;
+        }
+        return false;
+    }
+    explicit EntityPairIndex(int head, int tail):
+        head_entity(head), tail_entity(tail) {};
+    EntityPairIndex(const EntityPairIndex & ent_pair):
+        head_entity(ent_pair.head_entity), tail_entity(ent_pair.tail_entity) {
+    };
+};
 
 class Engine {
 private:
@@ -59,10 +98,9 @@ private:
 
     // Record entities that have some attribute (not the attribute value)
     std::map<std::string, std::set<int>>                        _attribute_key_to_entities;
-
     // Record entities that are pointed to by the relation
-    std::map<std::string, std::set<int>>                        _forward_relation_to_entities;
-    std::map<std::string, std::set<int>>                        _backward_relation_to_entities;
+    std::map<RelationIndex, std::set<EntityPairIndex>>       _relation_to_entity_pair;
+    std::map<EntityPairIndex, std::set<RelationIndex>>       _entity_pair_to_relation;
 
     static void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
 public:

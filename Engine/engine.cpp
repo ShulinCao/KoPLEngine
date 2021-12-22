@@ -32,7 +32,6 @@ Engine::Engine(std::string & kb_file_name) {
     json concept_json(kb.at("concepts"));
     json entity_json(kb.at("entities"));
 
-
     unsigned long total_concept_num = concept_json.size();
     unsigned long total_entity_num  = entity_json.size();
     std::cout << "number of concepts " << total_concept_num << std::endl;
@@ -79,7 +78,7 @@ Engine::Engine(std::string & kb_file_name) {
     // Construct "_entity_attribute"
     for (const auto & entity : entity_json.items()) {
         std::string entity_id(entity.key());
-        std::string entity_name(entity.value().at("name"));
+        auto entity_name = entity.value().at("name").get<std::string>();
 
         // For "entity_id", "entity_id_to_number", "entity_name", "entity_name_to_number"
         _entity_id.push_back(entity_id);
@@ -91,7 +90,7 @@ Engine::Engine(std::string & kb_file_name) {
         int cur_entity_number = _entity_name.size() - 1;
         _entity_is_instance_of.push_back(std::set<int>());
         for (const auto& concept_id : entity.value().at("instanceOf")) {
-            std::string concept_id_in_string(concept_id);
+            auto concept_id_in_string = concept_id.get<std::string>();
             int concept_number = _concept_id_to_number[concept_id_in_string];
             _entity_is_instance_of[cur_entity_number].insert(concept_number);
         }
@@ -101,10 +100,9 @@ Engine::Engine(std::string & kb_file_name) {
         for (auto attribute_json : entity.value().at("attributes")) {
             Attribute attribute;
             // obtain key
-            auto attribute_key = attribute_json.at("key");
-            if (ent_attrs.find(attribute_key) == ent_attrs.end()) {
-                ent_attrs[attribute_key] = std::vector<Attribute>();
-            }
+            auto attribute_key = attribute_json.at("key").get<std::string>();
+            // construct inverted index for attribute keys
+            _attribute_key_to_entities[attribute_key].insert(cur_entity_number);
             // obtain value
             BaseValue::parseValue(attribute.attribute_value, attribute_json.at("value"));
             // obtain qualifiers
@@ -118,16 +116,15 @@ Engine::Engine(std::string & kb_file_name) {
     // Construct "_entity_relation"
     for (const auto & entity : entity_json.items()) {
         std::vector<Relation> relation;
-
         for (const auto & relation_json : entity.value().at("relations")) {
             auto relation_name_string(relation_json.at("relation").get<std::string>());
             auto relation_direction_string(relation_json.at("direction").get<std::string>());
             RelationDirection relation_direction;
             if (relation_direction_string == "forward") {
-                relation_direction = forward;
+                relation_direction = RelationDirection::forward;
             }
             else if (relation_direction_string == "backward") {
-                relation_direction = backward;
+                relation_direction = RelationDirection::backward;
             }
             else {
                 std::cout << "Error!\n";
@@ -141,10 +138,15 @@ Engine::Engine(std::string & kb_file_name) {
             rel.relation_direction = relation_direction;
             rel.relation_tail_entity = tail_entity_number;
             _parseQualifier(rel.relation_qualifier, relation_json.at("qualifiers"));
-        }
 
+
+            RelationIndex relation_index(relation_name_string, relation_direction);
+            EntityPairIndex entity_pair_index(_entity_relation.size(), tail_entity_number);
+
+            _relation_to_entity_pair[relation_index].insert(entity_pair_index);
+            _entity_pair_to_relation[entity_pair_index].insert(relation_index);
+        }
         _entity_relation.push_back(relation);
     }
-
     std::cout << "End of initialize a new KB\n";
 }
