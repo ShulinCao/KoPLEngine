@@ -14,8 +14,7 @@
 
 using json = nlohmann::json;
 
-typedef     std::vector<std::map<std::string, BaseValue*>>      Qualifiers;
-
+typedef     std::map<std::string, std::vector<BaseValue*>>      Qualifiers;
 
 enum RelationDirection{
     forward,
@@ -23,14 +22,15 @@ enum RelationDirection{
 };
 
 
-typedef struct {
+typedef struct _Attribute{
     BaseValue *                                                 attribute_value;
     Qualifiers                                                  attribute_qualifiers;
 } Attribute;
 
-typedef struct {
+typedef struct _Relation{
     std::string                                                 relation_name;
     RelationDirection                                           relation_direction;
+    int                                                         relation_tail_entity;
     Qualifiers                                                  relation_qualifier;
 } Relation;
 
@@ -48,11 +48,12 @@ private:
     std::map<std::string, int>                                  _concept_id_to_number;
     std::map<std::string, int>                                  _entity_id_to_number;
 
+
     std::vector<std::set<int>>                                  _concept_sub_class_of;
     std::vector<std::set<int>>                                  _entity_is_instance_of;
 
 
-    std::vector<std::map<std::string, std::set<Attribute>>>     _entity_attribute;
+    std::vector<std::map<std::string, std::vector<Attribute>>>  _entity_attribute;
     std::vector<std::vector<Relation>>                          _entity_relation;
 
 
@@ -62,6 +63,8 @@ private:
     // Record entities that are pointed to by the relation
     std::map<std::string, std::set<int>>                        _forward_relation_to_entities;
     std::map<std::string, std::set<int>>                        _backward_relation_to_entities;
+
+    static void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
 public:
     explicit Engine(std::string & kb_file_name);
 };

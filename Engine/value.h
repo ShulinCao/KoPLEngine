@@ -21,7 +21,8 @@ public:
     // 0 -> base class, 1 -> string, 2 -> int, 3 -> float, 4 -> date, 5 -> year
     unsigned short type;
     explicit BaseValue(unsigned short type = base_type) : type(type) {};
-    static unsigned short convertStringTypeToShort(std::string & type_str, json & val);
+    static unsigned short convertStringTypeToShort(const std::string &type_str, const json &val);
+    static void parseValue(BaseValue* & value_ptr, const json & type_value_unit);
 };
 
 

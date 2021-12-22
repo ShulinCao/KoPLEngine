@@ -2,7 +2,7 @@
 
 
 //'string' 'quantity' 'date' 'year'
-unsigned short BaseValue::convertStringTypeToShort(std::string & type_str, json & val) {
+unsigned short BaseValue::convertStringTypeToShort(const std::string &type_str, const json &val) {
     if (type_str == "string") {
         return string_type;
     }
@@ -26,6 +26,42 @@ unsigned short BaseValue::convertStringTypeToShort(std::string & type_str, json 
     }
     else {
         std::cout << "Error!" << std::endl;
+        exit(112);
+    }
+}
+
+void BaseValue::parseValue(BaseValue *&value_ptr, const json &type_value_unit) {
+    std::string value_type_in_string(type_value_unit.at("type"));
+    auto value_val = type_value_unit.at("value");
+    auto value_type = convertStringTypeToShort(value_type_in_string, value_val);
+
+    std::string unit;
+    if (value_type == int_type || value_type == float_type) {
+        unit = type_value_unit.at("unit");
+    }
+
+    if (value_type == string_type) {
+        auto val = value_val.get<std::string>();
+        value_ptr = new StringValue(val, value_type);
+    }
+    else if (value_type == int_type) {
+        auto val = value_val.get<int>();
+        value_ptr = new QuantityValue(val, unit, value_type);
+    }
+    else if (value_type == float_type) {
+        auto val = value_val.get<double>();
+        value_ptr = new QuantityValue(val, unit, value_type);
+    }
+    else if (value_type == date_type) {
+        auto val = value_val.get<std::string>();
+        value_ptr = new DateValue(val, value_type);
+    }
+    else if (value_type == year_type) {
+        auto val = value_val.get<short>();
+        value_ptr = new YearValue(val, value_type);
+    }
+    else {
+        std::cout << "Type Error!\n";
         exit(112);
     }
 }
