@@ -248,3 +248,7 @@ Engine::Entities Engine::find(const std::string & find_entity_name) const {
         return {};
     }
 }
+
+Engine::Entities Engine::filterConcept(const Engine::Entities & entities, const std::string & concept_name) const {
+    return Engine::Entities();
+}

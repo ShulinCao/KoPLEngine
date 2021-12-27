@@ -130,11 +130,11 @@ public:
     // Operators
 
     // Use move semantic when assigning to an intermediate variable
-    // TODO: may return const Entities
+    // TODO: may return const reference of Entities
     Entities
     findAll() const;
 
-    // TODO: may return const Entities
+    // TODO: may return const reference of Entities
     Entities
     find(
             const std::string & find_entity_name
@@ -216,7 +216,7 @@ public:
             const std::string & qualifier_date_value
             ) const;
 
-
+    // TODO: may define these operators as static
     Entities
     relateOp(
             const Entities & entities,
