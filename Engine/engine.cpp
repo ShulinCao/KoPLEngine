@@ -48,6 +48,9 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     _entity_attribute.reserve(total_entity_num);
     _entity_relation.reserve(total_entity_num);
 
+    // Reserve for Index
+    _concept_has_instance_entities.resize(total_concept_num);
+
 
     // Construct "_concept_id", "_concept_id_to_number", "_concept_name", "_concept_name_to_number"
     for (auto & concept : concept_json.items()) {
@@ -95,6 +98,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             auto concept_id_in_string = concept_id.get<std::string>();
             int concept_number = _concept_id_to_number[concept_id_in_string];
             _entity_is_instance_of[cur_entity_number].insert(concept_number);
+            _concept_has_instance_entities[concept_number].insert(cur_entity_number);
         }
 
         // For "_entity_attribute"
@@ -241,14 +245,56 @@ Engine::Entities Engine::findAll() const {
 }
 
 Engine::Entities Engine::find(const std::string & find_entity_name) const {
-    try {
+    if (_entity_name_to_number.find(find_entity_name) != _entity_name_to_number.end()) {
         return _entity_name_to_number.at(find_entity_name);
     }
-    catch (const std::out_of_range & e) {
+    else {
         return {};
+    }
+
+}
+
+Engine::Entities Engine::filterConcept(
+        const Engine::Entities & entities,
+        const std::string & concept_name) const {
+
+    auto concept_numbers = std::vector<int>();
+    if (_concept_name_to_number.find(concept_name) != _concept_name_to_number.end()) {
+        concept_numbers = _concept_name_to_number.at(concept_name);
+    }
+
+    std::set<int> entity_set;
+    for (auto concept_num : concept_numbers) {
+        auto concept_inst = _concept_has_instance_entities.at(concept_num);
+        entity_set.insert(concept_inst.begin(), concept_inst.end());
+    }
+
+    Engine::Entities  output_entities;
+    for (auto ent : entities) {
+        if (entity_set.find(ent) != entity_set.end())   output_entities.push_back(ent);
+    }
+
+    return output_entities;
+}
+
+Engine::EntitiesWithFact Engine::filterStr(
+        const Engine::Entities & entities,
+        const std::string & string_key,
+        const std::string & string_value) const {
+    auto value_to_compare = StringValue(string_value, BaseValue::string_type);
+
+    auto entities_has_attribute = std::set<int>();
+    if (_attribute_key_to_entities.find(string_key) != _attribute_key_to_entities.end()) {
+        entities_has_attribute = _attribute_key_to_entities.at(string_key);
+    }
+
+    // TODO: Whether it is necessary to read the index?
+    // TODO: Maybe we can construct a tree for the large set. Need a branch.
+    Engine::Entities output_entities;
+    for (auto ent : entities) {
+        if (entities_has_attribute.find(ent) != entities_has_attribute.end()) {
+
+        }
     }
 }
 
-Engine::Entities Engine::filterConcept(const Engine::Entities & entities, const std::string & concept_name) const {
-    return Engine::Entities();
-}

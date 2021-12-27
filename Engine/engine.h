@@ -102,14 +102,18 @@ private:
 
     // Record entities that have some attribute (not the attribute value)
     std::map<std::string, std::set<int>>                        _attribute_key_to_entities;
+
     // Record entities that are pointed to by the relation
     std::map<RelationIndex, std::set<EntityPairIndex>>          _relation_to_entity_pair;
     std::map<EntityPairIndex, std::set<RelationIndex>>          _entity_pair_to_relation;
 
     // Record all entities
     typedef std::vector<int>                                    Entities;
-    typedef std::pair<Entities, Fact>                           EntityWithFact;
+    typedef std::pair<Entities, Fact>                           EntitiesWithFact;
     Entities                                                    _all_entities;
+
+    // Record entities of each instance
+    std::vector<std::set<int>>                                  _concept_has_instance_entities;
 
     static void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
 public:
@@ -148,7 +152,7 @@ public:
             const std::string & concept_name
             ) const;
 
-    std::vector<EntityWithFact>
+    EntitiesWithFact
     filterStr(
             const Entities & entities,
 
@@ -156,7 +160,7 @@ public:
             const std::string & string_value
             ) const;
 
-    std::vector<EntityWithFact>
+    EntitiesWithFact
     filterNum(
             const Entities & entities,
 
@@ -165,7 +169,7 @@ public:
             const std::string & op
             ) const;
 
-    std::vector<EntityWithFact>
+    EntitiesWithFact
     filterYear(
             const Entities & entities,
 
@@ -174,7 +178,7 @@ public:
             const std::string & op
             ) const;
 
-    std::vector<EntityWithFact>
+    EntitiesWithFact
     filterDate(
             const Entities & entities,
 
@@ -184,33 +188,33 @@ public:
             ) const;
 
 
-    std::vector<EntityWithFact>
+    EntitiesWithFact
     QfilterStr(
-            const std::vector<EntityWithFact> & entity_with_fact,
+            const std::vector<EntitiesWithFact> & entity_with_fact,
 
             const std::string & qualifier_string_key,
             const std::string & qualifier_string_value
             ) const;
 
-    std::vector<EntityWithFact>
+    std::vector<EntitiesWithFact>
     QfilterNum(
-            const std::vector<EntityWithFact> & entity_with_fact,
+            const std::vector<EntitiesWithFact> & entity_with_fact,
 
             const std::string & qualifier_num_key,
             const std::string & qualifier_string_value
             ) const;
 
-    std::vector<EntityWithFact>
+    std::vector<EntitiesWithFact>
     QfilterYear(
-            const std::vector<EntityWithFact> & entity_with_fact,
+            const std::vector<EntitiesWithFact> & entity_with_fact,
 
             const std::string & qualifier_year_key,
             const std::string & qualifier_year_value
             ) const;
 
-    std::vector<EntityWithFact>
+    std::vector<EntitiesWithFact>
     QfilterDate(
-            const std::vector<EntityWithFact> & entity_with_fact,
+            const std::vector<EntitiesWithFact> & entity_with_fact,
 
             const std::string & qualifier_date_key,
             const std::string & qualifier_date_value
