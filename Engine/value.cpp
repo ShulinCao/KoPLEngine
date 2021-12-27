@@ -8,9 +8,11 @@ unsigned short BaseValue::convertStringTypeToShort(const std::string &type_str, 
     }
     else if (type_str == "quantity") {
         if (val.is_number_float()) {
+//            std::cout << "float!" << std::endl;
             return float_type;
         }
         else if (val.is_number_integer()) {
+//            std::cout << "int!" << std::endl;
             return int_type;
         }
         else {
@@ -83,6 +85,28 @@ bool StringValue::operator!=(const StringValue &compare_value) const {
     return this -> value != compare_value.value;
 }
 
+std::string StringValue::toStr() const {
+    return std::string{value};
+}
+
+bool StringValue::valueCompare(const StringValue &compare_value, const std::string & op) const {
+    if (op == "==") {
+        return *this == compare_value;
+    }
+    else if (op == "<") {
+        return *this < compare_value;
+    }
+    else if (op == ">") {
+        return *this > compare_value;
+    }
+    else if(op == "!=") {
+        return *this != compare_value;
+    }
+    else {
+        std::cout << "Undefined operator " << op << std::endl;
+        exit(124);
+    }
+}
 
 
 bool QuantityValue::operator==(const QuantityValue &compare_value) const {
@@ -101,6 +125,36 @@ bool QuantityValue::operator!=(const QuantityValue &compare_value) const {
     return this -> value != compare_value.value;
 }
 
+std::string QuantityValue::toStr() const {
+    char quant_str[200];
+    if (type == float_type) {
+        sprintf(quant_str, "%.3f %s", value, unit.c_str());
+    }
+    else if (type == int_type) {
+        sprintf(quant_str, "%d %s", int(value), unit.c_str());
+    }
+
+    return std::string{quant_str};
+}
+
+bool QuantityValue::valueCompare(const QuantityValue & compare_value, const std::string & op) const {
+    if (op == "==") {
+        return *this == compare_value;
+    }
+    else if (op == "<") {
+        return *this < compare_value;
+    }
+    else if (op == ">") {
+        return *this > compare_value;
+    }
+    else if(op == "!=") {
+        return *this != compare_value;
+    }
+    else {
+        std::cout << "Undefined operator " << op << std::endl;
+        exit(124);
+    }
+}
 
 
 bool DateValue::operator==(const DateValue &compare_value) const {
@@ -127,6 +181,30 @@ bool DateValue::operator!=(const DateValue &compare_value) const {
     return !(*this == compare_value);
 }
 
+std::string DateValue::toStr() const {
+    char date_str[200];
+    sprintf(date_str, "%d-%d-%d", year, month, day);
+    return std::string{date_str};
+}
+
+bool DateValue::valueCompare(const DateValue &compare_value, const std::string &op) const {
+    if (op == "==") {
+        return *this == compare_value;
+    }
+    else if (op == "<") {
+        return *this < compare_value;
+    }
+    else if (op == ">") {
+        return *this > compare_value;
+    }
+    else if(op == "!=") {
+        return *this != compare_value;
+    }
+    else {
+        std::cout << "Undefined operator " << op << std::endl;
+        exit(124);
+    }
+}
 
 
 bool YearValue::operator==(const YearValue &compare_value) const {
@@ -143,5 +221,30 @@ bool YearValue::operator> (const YearValue &compare_value) const {
 
 bool YearValue::operator!=(const YearValue &compare_value) const {
     return this -> value != compare_value.value;
+}
+
+std::string YearValue::toStr() const {
+    char year_str[10];
+    sprintf(year_str, "%d", value);
+    return std::string{year_str};
+}
+
+bool YearValue::valueCompare(const YearValue &compare_value, const std::string &op) const {
+    if (op == "==") {
+        return *this == compare_value;
+    }
+    else if (op == "<") {
+        return *this < compare_value;
+    }
+    else if (op == ">") {
+        return *this > compare_value;
+    }
+    else if(op == "!=") {
+        return *this != compare_value;
+    }
+    else {
+        std::cout << "Undefined operator " << op << std::endl;
+        exit(124);
+    }
 }
 

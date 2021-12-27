@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 using json = nlohmann::json;
 
@@ -23,6 +24,7 @@ public:
     explicit BaseValue(unsigned short type = base_type) : type(type) {};
     static unsigned short convertStringTypeToShort(const std::string &type_str, const json &val);
     static void parseValue(BaseValue* & value_ptr, const json & type_value_unit);
+    virtual std::string toStr() const = 0;
 };
 
 
@@ -30,7 +32,7 @@ class StringValue: public BaseValue {
 public:
     std::string value;
 
-    explicit StringValue(std::string & val, unsigned short type = string_type): BaseValue(type), value(val) {
+    explicit StringValue(std::string val, unsigned short type = string_type): BaseValue(type), value(std::move(val)) {
         assert (type == string_type);
     };
 
@@ -38,6 +40,9 @@ public:
     bool operator <  (const StringValue & compare_value) const;
     bool operator >  (const StringValue & compare_value) const;
     bool operator != (const StringValue & compare_value) const;
+    bool valueCompare(const StringValue & compare_value, const std::string & op) const;
+
+    std::string toStr() const override;
 };
 
 
@@ -46,10 +51,10 @@ public:
     double value;
     std::string unit;
 
-    explicit QuantityValue(double val, std::string & u, unsigned short type) : BaseValue(type), value(val), unit(u) {
+    explicit QuantityValue(double val, std::string u, unsigned short type) : BaseValue(type), value(val), unit(std::move(u)) {
         assert (type == float_type);
     }
-    explicit QuantityValue(int val, std::string & u, unsigned short type) : BaseValue(type), value(val), unit(u) {
+    explicit QuantityValue(int val, std::string u, unsigned short type) : BaseValue(type), value(val), unit(std::move(u)) {
         assert (type == int_type);
     }
 
@@ -57,6 +62,9 @@ public:
     bool operator <  (const QuantityValue & compare_value) const;
     bool operator >  (const QuantityValue & compare_value) const;
     bool operator != (const QuantityValue & compare_value) const;
+    bool valueCompare(const QuantityValue & compare_value, const std::string & op) const;
+
+    std::string toStr() const override;
 };
 
 
@@ -66,7 +74,7 @@ public:
     short month = -1;
     short day = -1;
 
-    explicit DateValue(std::string & val, unsigned short type = date_type) : BaseValue(type) {
+    explicit DateValue(const std::string & val, unsigned short type = date_type) : BaseValue(type) {
         assert (type == date_type && val.length() == 10);
 
         size_t begin = 0;
@@ -103,6 +111,9 @@ public:
     bool operator <  (const DateValue & compare_value) const;
     bool operator >  (const DateValue & compare_value) const;
     bool operator != (const DateValue & compare_value) const;
+    bool valueCompare(const DateValue & compare_value, const std::string & op) const;
+
+    std::string toStr() const override;
 };
 
 
@@ -118,6 +129,22 @@ public:
     bool operator <  (const YearValue & compare_value) const;
     bool operator >  (const YearValue & compare_value) const;
     bool operator != (const YearValue & compare_value) const;
+
+    bool valueCompare(const YearValue & compare_value, const std::string & op) const;
+    std::string toStr() const override;
+};
+
+
+class Fact {
+public:
+    std::string key;
+    BaseValue * value_ptr = nullptr;
+    unsigned short type = BaseValue::base_type;
+
+    explicit Fact(std::string & k, BaseValue * val_ptr, unsigned short t) : key(k), value_ptr(val_ptr), type(t) {};
+    ~Fact() {
+        delete value_ptr;
+    };
 };
 
 #endif //KOPL_VALUE_H

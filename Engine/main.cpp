@@ -9,6 +9,10 @@ int main() {
     std::string file_name("../kb.json");
     Engine e(file_name);
     std::cout << "End of Debug Program!" << std::endl;
-    getchar();
+
+    for (auto x : e.find("Mxay")) {
+        std::cout << x << std::endl;
+    }
+
     return 0;
 }

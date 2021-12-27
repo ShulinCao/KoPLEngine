@@ -12,7 +12,9 @@ void Engine::_parseQualifier(Qualifiers & qualifier_output, const json & qualifi
     }
 }
 
-Engine::Engine(std::string & kb_file_name) {
+Engine::Engine(std::string & kb_file_name, int worker_num) {
+    _worker_num = worker_num;
+
     std::cout << "Initiate a new KB reading from \"" + kb_file_name + "\"" << std::endl;
     json kb;
     std::ifstream kb_file;
@@ -56,7 +58,7 @@ Engine::Engine(std::string & kb_file_name) {
         _concept_id_to_number[concept_id] = _concept_id.size() - 1;
 
         _concept_name.push_back(concept_name);
-        _concept_name_to_number[concept_name] = _concept_name.size() - 1;
+        _concept_name_to_number[concept_name].push_back(_concept_name.size() - 1);
     }
 
     // Construct "_concept_sub_class_of"
@@ -64,7 +66,7 @@ Engine::Engine(std::string & kb_file_name) {
         std::string concept_id(c.key());
         int cur_number = _concept_id_to_number[concept_id];
 
-        _concept_sub_class_of.push_back(std::set<int>());
+        _concept_sub_class_of.emplace_back();
 
         auto & concept_super_class = c.value().at("subclassOf");
         for (const auto& sup_class : concept_super_class) {
@@ -84,11 +86,11 @@ Engine::Engine(std::string & kb_file_name) {
         _entity_id.push_back(entity_id);
         _entity_id_to_number[entity_id] = _entity_id.size() - 1;
         _entity_name.push_back(entity_name);
-        _entity_name_to_number[entity_name] = _entity_name.size() - 1;
+        _entity_name_to_number[entity_name].push_back(_entity_name.size() - 1);
 
         // For "_entity_is_instance_of"
         int cur_entity_number = _entity_name.size() - 1;
-        _entity_is_instance_of.push_back(std::set<int>());
+        _entity_is_instance_of.emplace_back();
         for (const auto& concept_id : entity.value().at("instanceOf")) {
             auto concept_id_in_string = concept_id.get<std::string>();
             int concept_number = _concept_id_to_number[concept_id_in_string];
@@ -139,6 +141,7 @@ Engine::Engine(std::string & kb_file_name) {
             rel.relation_tail_entity = tail_entity_number;
             _parseQualifier(rel.relation_qualifier, relation_json.at("qualifiers"));
 
+            relation.push_back(rel);
 
             RelationIndex relation_index(relation_name_string, relation_direction);
             EntityPairIndex entity_pair_index(_entity_relation.size(), tail_entity_number);
@@ -148,5 +151,100 @@ Engine::Engine(std::string & kb_file_name) {
         }
         _entity_relation.push_back(relation);
     }
+
+    _all_entities.reserve(total_entity_num);
+    for (std::size_t i = 0; i < _entity_name.size(); i++) {
+        _all_entities.push_back(i);
+    }
+
+//    examineEntityAttribute();
+//    examineRelation();
+//    examineAttributeKeyIndex();
+//    examineRelationIndex();
+//    examineEntityPairIndex();
+
     std::cout << "End of initialize a new KB\n";
+}
+
+void Engine::examineEntityAttribute() const {
+    for (std::size_t i = 0; i < _entity_name.size(); i++) {
+        std::cout << "Name: " << _entity_name[i] << ", Taxonomy: ";
+        for (auto tax : _entity_is_instance_of[i]) {
+            std::cout << _concept_name[tax] << "|";
+        }
+        std::cout << std::endl;
+        for (const auto & attr : _entity_attribute[i]) {
+            auto attr_key = attr.first;
+            auto attr_vals = attr.second;
+            std::cout << "-- " << attr_key << ": " << std::endl;
+            for (const auto & attr_val : attr_vals) {
+                std::cout << "  -- " << attr_val.attribute_value->toStr() << std::endl;
+                for (const auto & qualifier : attr_val.attribute_qualifiers) {
+                    auto qual_key = qualifier.first;
+                    auto qual_vals = qualifier.second;
+                    std::cout << "    -- Qualifier Key: " << qual_key << ": " << std::endl;
+                    for (const auto & qual_val : qual_vals) {
+                        std::cout << "      -- " << qual_val->toStr() << std::endl;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Engine::examineRelation() const {
+    for (std::size_t i = 0; i < _entity_name.size(); i++) {
+        auto head_entity = _entity_name[i];
+        std::cout << head_entity << ": " << _entity_relation[i].size() << std::endl;
+
+        for (const auto & relation : _entity_relation[i]) {
+            auto tail_entity_number = relation.relation_tail_entity;
+            auto tail_entity = _entity_name[tail_entity_number];
+            auto relation_name = relation.relation_name;
+            auto relation_direction = relation.relation_direction;
+            if (relation_direction == RelationDirection::forward) {
+                std::cout << "  -->";
+            }
+            else {
+                std::cout << "  <--";
+            }
+            std::cout << "(" << head_entity << ", " << relation_name << ", " << tail_entity << ")" << std::endl;
+            for (const auto & qualifiers : relation.relation_qualifier) {
+                auto qual_key = qualifiers.first;
+                auto qual_vals = qualifiers.second;
+                std::cout << "    -- Qualifier Key: " << qual_key << ": " << std::endl;
+                for (const auto & qual_val : qual_vals) {
+                    std::cout << "      -- " << qual_val->toStr() << std::endl;
+                }
+            }
+        }
+
+    }
+}
+
+void Engine::examineAttributeKeyIndex() const {
+
+}
+
+void Engine::examineRelationIndex() const {
+
+}
+
+void Engine::examineEntityPairIndex() const {
+
+}
+
+
+
+Engine::Entities Engine::findAll() const {
+    return _all_entities;
+}
+
+Engine::Entities Engine::find(const std::string & find_entity_name) const {
+    try {
+        return _entity_name_to_number.at(find_entity_name);
+    }
+    catch (const std::out_of_range & e) {
+        return {};
+    }
 }
