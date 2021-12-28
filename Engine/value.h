@@ -14,8 +14,12 @@ class CompareResult {
 public:
     enum CompRes { no, yes, not_sure };
 
-    explicit CompareResult() {
+    CompRes compare_result;
 
+    explicit CompareResult() : compare_result(CompRes::not_sure) {};
+    explicit CompareResult(bool bool_result) {
+        if (bool_result)        compare_result = CompRes::yes;
+        else                    compare_result = CompRes::no;
     }
 };
 
