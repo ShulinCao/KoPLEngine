@@ -13,7 +13,6 @@ using json = nlohmann::json;
 class CompareResult {
 public:
     enum CompRes { no, yes, not_sure };
-
     CompRes compare_result;
 
     explicit CompareResult() : compare_result(CompRes::not_sure) {};
@@ -38,7 +37,7 @@ public:
 
     explicit BaseValue(unsigned short type = base_type) : type(type) {};
 
-    static unsigned short convertStringTypeToShort(const std::string &type_str, const json &val);
+    static unsigned short convertJsonStringTypeToShort(const std::string &type_str, const json &val);
     static void parseValue(BaseValue* & value_ptr, const json & type_value_unit);
 
     static bool canCompare(const BaseValue* a, const BaseValue* b);

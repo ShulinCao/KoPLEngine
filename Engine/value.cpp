@@ -2,17 +2,15 @@
 
 
 //'string' 'quantity' 'date' 'year'
-unsigned short BaseValue::convertStringTypeToShort(const std::string &type_str, const json &val) {
+unsigned short BaseValue::convertJsonStringTypeToShort(const std::string & type_str, const json & val) {
     if (type_str == "string") {
         return string_type;
     }
     else if (type_str == "quantity") {
         if (val.is_number_float()) {
-//            std::cout << "float!" << std::endl;
             return float_type;
         }
         else if (val.is_number_integer()) {
-//            std::cout << "int!" << std::endl;
             return int_type;
         }
         else {
@@ -32,10 +30,10 @@ unsigned short BaseValue::convertStringTypeToShort(const std::string &type_str, 
     }
 }
 
-void BaseValue::parseValue(BaseValue *&value_ptr, const json &type_value_unit) {
+void BaseValue::parseValue(BaseValue* & value_ptr, const json & type_value_unit) {
     std::string value_type_in_string(type_value_unit.at("type"));
     auto value_val = type_value_unit.at("value");
-    auto value_type = convertStringTypeToShort(value_type_in_string, value_val);
+    auto value_type = convertJsonStringTypeToShort(value_type_in_string, value_val);
 
     std::string unit;
     if (value_type == int_type || value_type == float_type) {
@@ -73,36 +71,36 @@ bool BaseValue::canCompare(const BaseValue* a, const BaseValue* b) {
         return b -> type == string_type;
     }
     else if (a -> type == int_type || a -> type == float_type) {
-        return (b -> type == int_type || b -> type == float_type) && a->_getUnit() == b->_getUnit();
+        return (b -> type == int_type || b -> type == float_type) && (a->_getUnit() == b->_getUnit());
     }
     else {
         return (b -> type == year_type || b -> type == date_type);
     }
 }
 
-const std::string &BaseValue::_getUnit() const {
+const std::string & BaseValue::_getUnit() const {
     std::cout << "Calling from Non-Quantitive value\n";
     exit(1232);
 }
 
-bool BaseValue::valueContains(const BaseValue *another) const {
+bool BaseValue::valueContains(const BaseValue * another) const {
     std::cout << "valueContains is not implemented!\n";
     exit(1232);
 }
 
-bool StringValue::operator==(const StringValue &compare_value) const {
+bool StringValue::operator==(const StringValue & compare_value) const {
     return this -> value == compare_value.value;
 }
 
-bool StringValue::operator< (const StringValue &compare_value) const {
+bool StringValue::operator< (const StringValue & compare_value) const {
     return this -> value <  compare_value.value;
 }
 
-bool StringValue::operator> (const StringValue &compare_value) const {
+bool StringValue::operator> (const StringValue & compare_value) const {
     return this -> value >  compare_value.value;
 }
 
-bool StringValue::operator!=(const StringValue &compare_value) const {
+bool StringValue::operator!=(const StringValue & compare_value) const {
     return this -> value != compare_value.value;
 }
 
@@ -110,7 +108,7 @@ std::string StringValue::toPrintStr() const {
     return std::string{value};
 }
 
-bool StringValue::valueCompare(const StringValue &compare_value, const std::string & op) const {
+bool StringValue::valueCompare(const StringValue & compare_value, const std::string & op) const {
     if (op == "==") {
         return *this == compare_value;
     }
@@ -130,19 +128,19 @@ bool StringValue::valueCompare(const StringValue &compare_value, const std::stri
 }
 
 
-bool QuantityValue::operator==(const QuantityValue &compare_value) const {
+bool QuantityValue::operator==(const QuantityValue & compare_value) const {
     return this -> value == compare_value.value;
 }
 
-bool QuantityValue::operator< (const QuantityValue &compare_value) const {
+bool QuantityValue::operator< (const QuantityValue & compare_value) const {
     return this -> value <  compare_value.value;
 }
 
-bool QuantityValue::operator> (const QuantityValue &compare_value) const {
+bool QuantityValue::operator> (const QuantityValue & compare_value) const {
     return this -> value >  compare_value.value;
 }
 
-bool QuantityValue::operator!=(const QuantityValue &compare_value) const {
+bool QuantityValue::operator!=(const QuantityValue & compare_value) const {
     return this -> value != compare_value.value;
 }
 
@@ -182,11 +180,11 @@ const std::string & QuantityValue::_getUnit() const {
 }
 
 
-bool DateValue::operator==(const DateValue &compare_value) const {
+bool DateValue::operator==(const DateValue & compare_value) const {
     return (this -> year == compare_value.year && this -> month == compare_value.month && this -> day == compare_value.day);
 }
 
-bool DateValue::operator< (const DateValue &compare_value) const {
+bool DateValue::operator< (const DateValue & compare_value) const {
     return (
          this -> year <  compare_value.year ||
         (this -> year == compare_value.year && this -> month <  compare_value.month) ||
@@ -194,7 +192,7 @@ bool DateValue::operator< (const DateValue &compare_value) const {
     );
 }
 
-bool DateValue::operator> (const DateValue &compare_value) const {
+bool DateValue::operator> (const DateValue & compare_value) const {
     return (
          this -> year >  compare_value.year ||
         (this -> year == compare_value.year && this -> month >  compare_value.month) ||
@@ -202,7 +200,7 @@ bool DateValue::operator> (const DateValue &compare_value) const {
     );
 }
 
-bool DateValue::operator!=(const DateValue &compare_value) const {
+bool DateValue::operator!=(const DateValue & compare_value) const {
     return !(*this == compare_value);
 }
 
@@ -212,7 +210,7 @@ std::string DateValue::toPrintStr() const {
     return std::string{date_str};
 }
 
-bool DateValue::valueCompare(const DateValue &compare_value, const std::string &op) const {
+bool DateValue::valueCompare(const DateValue & compare_value, const std::string &op) const {
     if (op == "==") {
         return *this == compare_value;
     }
@@ -232,19 +230,19 @@ bool DateValue::valueCompare(const DateValue &compare_value, const std::string &
 }
 
 
-bool YearValue::operator==(const YearValue &compare_value) const {
+bool YearValue::operator==(const YearValue & compare_value) const {
     return this -> value == compare_value.value;
 }
 
-bool YearValue::operator< (const YearValue &compare_value) const {
+bool YearValue::operator< (const YearValue & compare_value) const {
     return this -> value <  compare_value.value;
 }
 
-bool YearValue::operator> (const YearValue &compare_value) const {
+bool YearValue::operator> (const YearValue & compare_value) const {
     return this -> value >  compare_value.value;
 }
 
-bool YearValue::operator!=(const YearValue &compare_value) const {
+bool YearValue::operator!=(const YearValue & compare_value) const {
     return this -> value != compare_value.value;
 }
 
@@ -254,7 +252,7 @@ std::string YearValue::toPrintStr() const {
     return std::string{year_str};
 }
 
-bool YearValue::valueCompare(const YearValue &compare_value, const std::string &op) const {
+bool YearValue::valueCompare(const YearValue & compare_value, const std::string & op) const {
     if (op == "==") {
         return *this == compare_value;
     }
@@ -273,7 +271,7 @@ bool YearValue::valueCompare(const YearValue &compare_value, const std::string &
     }
 }
 
-bool YearValue::valueContains(const BaseValue *another) const {
+bool YearValue::valueContains(const BaseValue * another) const {
     if (another -> type == year_type) {
         return *this == *((YearValue*)another);
     }
