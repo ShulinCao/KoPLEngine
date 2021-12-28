@@ -31,8 +31,10 @@ public:
     virtual std::string toPrintStr() const = 0;
     virtual std::string toStandardStr() const = 0;
 
-    virtual const std::string & getUnit() const;
     virtual bool valueContains(const BaseValue* another) const;
+
+private:
+    virtual const std::string & _getUnit() const;
 };
 
 
@@ -75,7 +77,9 @@ public:
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
-    const std::string & getUnit() const override;
+
+private:
+    const std::string & _getUnit() const override;
 };
 
 

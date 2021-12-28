@@ -73,14 +73,14 @@ bool BaseValue::canCompare(const BaseValue* a, const BaseValue* b) {
         return b -> type == string_type;
     }
     else if (a -> type == int_type || a -> type == float_type) {
-        return (b -> type == int_type || b -> type == float_type) && a -> getUnit() == b -> getUnit();
+        return (b -> type == int_type || b -> type == float_type) && a->_getUnit() == b->_getUnit();
     }
     else {
         return (b -> type == year_type || b -> type == date_type);
     }
 }
 
-const std::string &BaseValue::getUnit() const {
+const std::string &BaseValue::_getUnit() const {
     std::cout << "Calling from Non-Quantitive value\n";
     exit(1232);
 }
@@ -177,7 +177,7 @@ bool QuantityValue::valueCompare(const QuantityValue & compare_value, const std:
     }
 }
 
-const std::string & QuantityValue::getUnit() const {
+const std::string & QuantityValue::_getUnit() const {
     return unit;
 }
 
