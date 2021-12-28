@@ -58,3 +58,5 @@ Engine/cmake-build-saberrelease
 Engine/cmake-build-debug
 *.DS_Store
 .idea
+
+Engine/kb.json
