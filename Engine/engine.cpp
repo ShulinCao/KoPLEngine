@@ -281,23 +281,29 @@ Engine::EntitiesWithFact Engine::filterStr(
         const Engine::Entities & entities,
         const std::string & string_key,
         const std::string & string_value) const {
-    auto value_to_compare = StringValue(string_value, BaseValue::string_type);
+
 
 //    auto entities_has_attribute = std::set<int>();
 //    if (_attribute_key_to_entities.find(string_key) != _attribute_key_to_entities.end()) {
 //        entities_has_attribute = _attribute_key_to_entities.at(string_key);
 //    }
-
     // TODO: Whether it is necessary to read the index? Temporarily add the index to the comments.
     // TODO: Maybe we can construct a tree for the large set. Need a branch.
-    Engine::Entities output_entities;
+
+    auto value_to_compare = StringValue(string_value, BaseValue::string_type);
+    Engine::Entities return_entities;
+    std::vector<BaseValue*> return_attrs;
     for (auto ent : entities) {
         const auto & entity_attributes = _entity_attribute[ent];
         if (entity_attributes.find(string_key) != entity_attributes.end()) {
             for (const auto & entity_att : entity_attributes.at(string_key)) {
-                // TODO: compare
+                if (StringValue::canCompare(entity_att.attribute_value, &value_to_compare)) {
+                    return_entities.push_back(ent);
+                    return_attrs.push_back(entity_att.attribute_value);
+                }
             }
         }
     }
+    return {return_entities, return_attrs};
 }
 

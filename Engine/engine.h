@@ -109,7 +109,7 @@ private:
 
     // Record all entities
     typedef std::vector<int>                                    Entities;
-    typedef std::pair<Entities, Fact>                           EntitiesWithFact;
+    typedef std::pair<Entities, std::vector<BaseValue*>>        EntitiesWithFact;
     Entities                                                    _all_entities;
 
     // Record entities of each instance
