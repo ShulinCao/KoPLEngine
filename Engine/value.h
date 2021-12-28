@@ -9,6 +9,17 @@
 
 using json = nlohmann::json;
 
+
+class CompareResult {
+public:
+    enum CompRes { no, yes, not_sure };
+
+    explicit CompareResult() {
+
+    }
+};
+
+
 class BaseValue {
 public:
     // 0 -> base class, 1 -> string, 2 -> int, 3 -> float, 4 -> date, 5 -> year
