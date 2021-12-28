@@ -39,13 +39,14 @@ public:
 
     static unsigned short convertJsonStringTypeToShort(const std::string &type_str, const json &val);
     static void parseValue(BaseValue* & value_ptr, const json & type_value_unit);
+    static BaseValue* convertStringToValue(const std::string & value_in_string, unsigned short value_type);
 
     static bool canCompare(const BaseValue* a, const BaseValue* b);
 
     virtual std::string toPrintStr() const = 0;
     virtual std::string toStandardStr() const = 0;
 
-    virtual bool valueContains(const BaseValue* another) const;
+    virtual CompareResult valueCompare(const BaseValue* compare_value, const std::string & op) const = 0;
 
 private:
     virtual const std::string & _getUnit() const;
@@ -59,12 +60,13 @@ public:
     explicit StringValue(std::string val, unsigned short type = string_type): BaseValue(type), value(std::move(val)) {
         assert (type == string_type);
     };
+    explicit StringValue(std::string val) : BaseValue(string_type), value(std::move(val)) {};
 
     bool operator == (const StringValue & compare_value) const;
     bool operator <  (const StringValue & compare_value) const;
     bool operator >  (const StringValue & compare_value) const;
     bool operator != (const StringValue & compare_value) const;
-    bool valueCompare(const StringValue & compare_value, const std::string & op) const;
+    CompareResult valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
@@ -82,12 +84,24 @@ public:
     explicit QuantityValue(int val, std::string u, unsigned short type) : BaseValue(type), value(val), unit(std::move(u)) {
         assert (type == int_type);
     }
+    explicit QuantityValue(std::string val) : BaseValue(float_type) {
+        auto end_of_number = val.size();
+        for (std::size_t i = 0; i < val.size(); i++) {
+            if (val[i] == ' ') {
+                end_of_number = i;
+                break;
+            }
+        }
+        auto quantity_value_string = val.substr(0, end_of_number);
+        value = atof(val.c_str());
+        unit = val.substr(end_of_number + 1, val.size() - end_of_number - 1);
+    }
 
     bool operator == (const QuantityValue & compare_value) const;
     bool operator <  (const QuantityValue & compare_value) const;
     bool operator >  (const QuantityValue & compare_value) const;
     bool operator != (const QuantityValue & compare_value) const;
-    bool valueCompare(const QuantityValue & compare_value, const std::string & op) const;
+    CompareResult valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
@@ -140,11 +154,10 @@ public:
     bool operator <  (const DateValue & compare_value) const;
     bool operator >  (const DateValue & compare_value) const;
     bool operator != (const DateValue & compare_value) const;
-    bool valueCompare(const DateValue & compare_value, const std::string & op) const;
+    CompareResult valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
-    bool valueContains(const BaseValue* another) const override;
 };
 
 
@@ -155,16 +168,16 @@ public:
     explicit YearValue(short val, unsigned short type = year_type) : BaseValue(type), value(val) {
         assert (type == year_type);
     }
+    explicit YearValue(std::string val) : BaseValue(year_type), value(atoi(val.c_str())) {};
 
     bool operator == (const YearValue & compare_value) const;
     bool operator <  (const YearValue & compare_value) const;
     bool operator >  (const YearValue & compare_value) const;
     bool operator != (const YearValue & compare_value) const;
-    bool valueCompare(const YearValue & compare_value, const std::string & op) const;
+    CompareResult valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
-    bool valueContains(const BaseValue* another) const override;
 };
 
 

@@ -66,6 +66,39 @@ void BaseValue::parseValue(BaseValue* & value_ptr, const json & type_value_unit)
     }
 }
 
+BaseValue* BaseValue::convertStringToValue(const std::string & value_in_string, unsigned short value_type) {
+    BaseValue* value_ptr = nullptr;
+    if (value_type == string_type) {
+        value_ptr = new StringValue(value_in_string, value_type);
+    }
+    else if (value_type == int_type || value_type == float_type) {
+        auto end_of_number = value_in_string.size();
+        for (std::size_t i = 0; i < value_in_string.size(); i++) {
+            if (value_in_string[i] == ' ') {
+                end_of_number = i;
+                break;
+            }
+        }
+        auto quantity_value_string = value_in_string.substr(0, end_of_number);
+        auto quantity_unit_string = value_in_string.substr(end_of_number + 1, value_in_string.size() - end_of_number - 1);
+
+        auto quantity_value = atof(value_in_string.c_str());
+        value_ptr = new QuantityValue(quantity_value, quantity_unit_string, float_type);
+    }
+    else if (value_type == year_type) {
+        auto year_value = (short)atoi(value_in_string.c_str());
+        value_ptr = new YearValue(year_value, year_type);
+    }
+    else if (value_type == date_type) {
+        value_ptr = new DateValue(value_in_string, date_type);
+    }
+    else {
+        std::cout << "Type Error!\n";
+        exit(125);
+    }
+    return value_ptr;
+}
+
 bool BaseValue::canCompare(const BaseValue* a, const BaseValue* b) {
     if (a -> type == string_type) {
         return b -> type == string_type;
@@ -80,11 +113,6 @@ bool BaseValue::canCompare(const BaseValue* a, const BaseValue* b) {
 
 const std::string & BaseValue::_getUnit() const {
     std::cout << "Calling from Non-Quantitive value\n";
-    exit(1232);
-}
-
-bool BaseValue::valueContains(const BaseValue * another) const {
-    std::cout << "valueContains is not implemented!\n";
     exit(1232);
 }
 
@@ -270,16 +298,3 @@ bool YearValue::valueCompare(const YearValue & compare_value, const std::string 
         exit(124);
     }
 }
-
-bool YearValue::valueContains(const BaseValue * another) const {
-    if (another -> type == year_type) {
-        return *this == *((YearValue*)another);
-    }
-    else if (another -> type == date_type) {
-        auto another_year_value = ((DateValue*)another) -> year;
-        auto another_year = YearValue(another_year_value, year_type);
-        return *this == another_year;
-    }
-    return false;
-}
-
