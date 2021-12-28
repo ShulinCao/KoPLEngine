@@ -56,4 +56,5 @@ Engine/.idea
 Engine/cmake-build-laptopdebug
 Engine/cmake-build-saberrelease
 Engine/cmake-build-debug
-
+*.DS_Store
+.idea
