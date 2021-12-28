@@ -12,6 +12,9 @@ using json = nlohmann::json;
 
 class CompareResult {
 public:
+    // not_sure for non-comparable
+    // yew for comparable, and satisfy the comparison conditions
+    // yes for comparable, and not satisfy the comparison conditions
     enum CompRes { no, yes, not_sure };
     CompRes compare_result;
 
@@ -19,6 +22,10 @@ public:
     explicit CompareResult(bool bool_result) {
         if (bool_result)        compare_result = CompRes::yes;
         else                    compare_result = CompRes::no;
+    }
+    bool toBool() {
+        if (compare_result == yes)      return true;            // true  for 'yes'
+        else                            return false;           // false for 'no', and 'not_sure'
     }
 };
 
