@@ -50,3 +50,8 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+.idea
+Engine/cmake-build-laptopdebug
+Engine/cmake-build-saberrelease
