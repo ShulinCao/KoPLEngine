@@ -34,8 +34,8 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     json concept_json(kb.at("concepts"));
     json entity_json(kb.at("entities"));
 
-    unsigned long total_concept_num = concept_json.size();
-    unsigned long total_entity_num  = entity_json.size();
+    auto total_concept_num = concept_json.size();
+    auto total_entity_num  = entity_json.size();
     std::cout << "number of concepts " << total_concept_num << std::endl;
     std::cout << "number of entities " << total_entity_num << std::endl;
 
@@ -58,10 +58,10 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         std::string concept_name(concept.value().at("name"));
 
         _concept_id.push_back(concept_id);
-        _concept_id_to_number[concept_id] = _concept_id.size() - 1;
+        _concept_id_to_number[concept_id] = (int)_concept_id.size() - 1;
 
         _concept_name.push_back(concept_name);
-        _concept_name_to_number[concept_name].push_back(_concept_name.size() - 1);
+        _concept_name_to_number[concept_name].push_back((int)_concept_name.size() - 1);
     }
 
     // Construct "_concept_sub_class_of"
@@ -87,12 +87,12 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 
         // For "entity_id", "entity_id_to_number", "entity_name", "entity_name_to_number"
         _entity_id.push_back(entity_id);
-        _entity_id_to_number[entity_id] = _entity_id.size() - 1;
+        _entity_id_to_number[entity_id] = (int)_entity_id.size() - 1;
         _entity_name.push_back(entity_name);
-        _entity_name_to_number[entity_name].push_back(_entity_name.size() - 1);
+        _entity_name_to_number[entity_name].push_back((int)_entity_name.size() - 1);
 
         // For "_entity_is_instance_of"
-        int cur_entity_number = _entity_name.size() - 1;
+        auto cur_entity_number = (int)_entity_name.size() - 1;
         _entity_is_instance_of.emplace_back();
         for (const auto& concept_id : entity.value().at("instanceOf")) {
             auto concept_id_in_string = concept_id.get<std::string>();
@@ -148,7 +148,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             relation.push_back(rel);
 
             RelationIndex relation_index(relation_name_string, relation_direction);
-            EntityPairIndex entity_pair_index(_entity_relation.size(), tail_entity_number);
+            EntityPairIndex entity_pair_index((int)_entity_relation.size(), tail_entity_number);
 
             _relation_to_entity_pair[relation_index].insert(entity_pair_index);
             _entity_pair_to_relation[entity_pair_index].insert(relation_index);
@@ -158,7 +158,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 
     _all_entities.reserve(total_entity_num);
     for (std::size_t i = 0; i < _entity_name.size(); i++) {
-        _all_entities.push_back(i);
+        _all_entities.push_back((int)i);
     }
 
 //    examineEntityAttribute();
@@ -182,13 +182,13 @@ void Engine::examineEntityAttribute() const {
             auto attr_vals = attr.second;
             std::cout << "-- " << attr_key << ": " << std::endl;
             for (const auto & attr_val : attr_vals) {
-                std::cout << "  -- " << attr_val.attribute_value->toStr() << std::endl;
+                std::cout << "  -- " << attr_val.attribute_value->toPrintStr() << std::endl;
                 for (const auto & qualifier : attr_val.attribute_qualifiers) {
                     auto qual_key = qualifier.first;
                     auto qual_vals = qualifier.second;
                     std::cout << "    -- Qualifier Key: " << qual_key << ": " << std::endl;
                     for (const auto & qual_val : qual_vals) {
-                        std::cout << "      -- " << qual_val->toStr() << std::endl;
+                        std::cout << "      -- " << qual_val->toPrintStr() << std::endl;
                     }
                 }
             }
@@ -218,7 +218,7 @@ void Engine::examineRelation() const {
                 auto qual_vals = qualifiers.second;
                 std::cout << "    -- Qualifier Key: " << qual_key << ": " << std::endl;
                 for (const auto & qual_val : qual_vals) {
-                    std::cout << "      -- " << qual_val->toStr() << std::endl;
+                    std::cout << "      -- " << qual_val->toPrintStr() << std::endl;
                 }
             }
         }
@@ -283,17 +283,20 @@ Engine::EntitiesWithFact Engine::filterStr(
         const std::string & string_value) const {
     auto value_to_compare = StringValue(string_value, BaseValue::string_type);
 
-    auto entities_has_attribute = std::set<int>();
-    if (_attribute_key_to_entities.find(string_key) != _attribute_key_to_entities.end()) {
-        entities_has_attribute = _attribute_key_to_entities.at(string_key);
-    }
+//    auto entities_has_attribute = std::set<int>();
+//    if (_attribute_key_to_entities.find(string_key) != _attribute_key_to_entities.end()) {
+//        entities_has_attribute = _attribute_key_to_entities.at(string_key);
+//    }
 
-    // TODO: Whether it is necessary to read the index?
+    // TODO: Whether it is necessary to read the index? Temporarily add the index to the comments.
     // TODO: Maybe we can construct a tree for the large set. Need a branch.
     Engine::Entities output_entities;
     for (auto ent : entities) {
-        if (entities_has_attribute.find(ent) != entities_has_attribute.end()) {
-
+        const auto & entity_attributes = _entity_attribute[ent];
+        if (entity_attributes.find(string_key) != entity_attributes.end()) {
+            for (const auto & entity_att : entity_attributes.at(string_key)) {
+                // TODO: compare
+            }
         }
     }
 }

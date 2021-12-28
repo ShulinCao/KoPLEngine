@@ -18,13 +18,21 @@ public:
     const static unsigned short float_type  = 3;
     const static unsigned short date_type   = 4;
     const static unsigned short year_type   = 5;
-
     // 0 -> base class, 1 -> string, 2 -> int, 3 -> float, 4 -> date, 5 -> year
     unsigned short type;
+
     explicit BaseValue(unsigned short type = base_type) : type(type) {};
+
     static unsigned short convertStringTypeToShort(const std::string &type_str, const json &val);
     static void parseValue(BaseValue* & value_ptr, const json & type_value_unit);
-    virtual std::string toStr() const = 0;
+
+    static bool canCompare(const BaseValue* a, const BaseValue* b);
+
+    virtual std::string toPrintStr() const = 0;
+    virtual std::string toStandardStr() const = 0;
+
+    virtual const std::string & getUnit() const;
+    virtual bool valueContains(const BaseValue* another) const;
 };
 
 
@@ -42,7 +50,8 @@ public:
     bool operator != (const StringValue & compare_value) const;
     bool valueCompare(const StringValue & compare_value, const std::string & op) const;
 
-    std::string toStr() const override;
+    std::string toPrintStr() const override;
+    std::string toStandardStr() const override;
 };
 
 
@@ -64,7 +73,9 @@ public:
     bool operator != (const QuantityValue & compare_value) const;
     bool valueCompare(const QuantityValue & compare_value, const std::string & op) const;
 
-    std::string toStr() const override;
+    std::string toPrintStr() const override;
+    std::string toStandardStr() const override;
+    const std::string & getUnit() const override;
 };
 
 
@@ -113,7 +124,9 @@ public:
     bool operator != (const DateValue & compare_value) const;
     bool valueCompare(const DateValue & compare_value, const std::string & op) const;
 
-    std::string toStr() const override;
+    std::string toPrintStr() const override;
+    std::string toStandardStr() const override;
+    bool valueContains(const BaseValue* another) const override;
 };
 
 
@@ -129,9 +142,11 @@ public:
     bool operator <  (const YearValue & compare_value) const;
     bool operator >  (const YearValue & compare_value) const;
     bool operator != (const YearValue & compare_value) const;
-
     bool valueCompare(const YearValue & compare_value, const std::string & op) const;
-    std::string toStr() const override;
+
+    std::string toPrintStr() const override;
+    std::string toStandardStr() const override;
+    bool valueContains(const BaseValue* another) const override;
 };
 
 

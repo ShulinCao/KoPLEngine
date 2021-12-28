@@ -68,6 +68,27 @@ void BaseValue::parseValue(BaseValue *&value_ptr, const json &type_value_unit) {
     }
 }
 
+bool BaseValue::canCompare(const BaseValue* a, const BaseValue* b) {
+    if (a -> type == string_type) {
+        return b -> type == string_type;
+    }
+    else if (a -> type == int_type || a -> type == float_type) {
+        return (b -> type == int_type || b -> type == float_type) && a -> getUnit() == b -> getUnit();
+    }
+    else {
+        return (b -> type == year_type || b -> type == date_type);
+    }
+}
+
+const std::string &BaseValue::getUnit() const {
+    std::cout << "Calling from Non-Quantitive value\n";
+    exit(1232);
+}
+
+bool BaseValue::valueContains(const BaseValue *another) const {
+    std::cout << "valueContains is not implemented!\n";
+    exit(1232);
+}
 
 bool StringValue::operator==(const StringValue &compare_value) const {
     return this -> value == compare_value.value;
@@ -85,7 +106,7 @@ bool StringValue::operator!=(const StringValue &compare_value) const {
     return this -> value != compare_value.value;
 }
 
-std::string StringValue::toStr() const {
+std::string StringValue::toPrintStr() const {
     return std::string{value};
 }
 
@@ -125,7 +146,7 @@ bool QuantityValue::operator!=(const QuantityValue &compare_value) const {
     return this -> value != compare_value.value;
 }
 
-std::string QuantityValue::toStr() const {
+std::string QuantityValue::toPrintStr() const {
     char quant_str[200];
     if (type == float_type) {
         sprintf(quant_str, "%.3f %s", value, unit.c_str());
@@ -156,6 +177,10 @@ bool QuantityValue::valueCompare(const QuantityValue & compare_value, const std:
     }
 }
 
+const std::string & QuantityValue::getUnit() const {
+    return unit;
+}
+
 
 bool DateValue::operator==(const DateValue &compare_value) const {
     return (this -> year == compare_value.year && this -> month == compare_value.month && this -> day == compare_value.day);
@@ -181,7 +206,7 @@ bool DateValue::operator!=(const DateValue &compare_value) const {
     return !(*this == compare_value);
 }
 
-std::string DateValue::toStr() const {
+std::string DateValue::toPrintStr() const {
     char date_str[200];
     sprintf(date_str, "%d-%d-%d", year, month, day);
     return std::string{date_str};
@@ -223,7 +248,7 @@ bool YearValue::operator!=(const YearValue &compare_value) const {
     return this -> value != compare_value.value;
 }
 
-std::string YearValue::toStr() const {
+std::string YearValue::toPrintStr() const {
     char year_str[10];
     sprintf(year_str, "%d", value);
     return std::string{year_str};
@@ -246,5 +271,17 @@ bool YearValue::valueCompare(const YearValue &compare_value, const std::string &
         std::cout << "Undefined operator " << op << std::endl;
         exit(124);
     }
+}
+
+bool YearValue::valueContains(const BaseValue *another) const {
+    if (another -> type == year_type) {
+        return *this == *((YearValue*)another);
+    }
+    else if (another -> type == date_type) {
+        auto another_year_value = ((DateValue*)another) -> year;
+        auto another_year = YearValue(another_year_value, year_type);
+        return *this == another_year;
+    }
+    return false;
 }
 
