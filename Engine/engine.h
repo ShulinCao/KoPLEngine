@@ -116,6 +116,13 @@ private:
     std::vector<std::set<int>>                                  _concept_has_instance_entities;
 
     static void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
+    std::shared_ptr<EntitiesWithFact>
+    _filter_attribute(
+            const Engine::Entities & entities,
+
+            const std::string & key,
+            const BaseValue* value_to_compare
+    ) const;
 public:
     explicit Engine(std::string & kb_file_name, int worker_num = 4);
 
@@ -152,7 +159,7 @@ public:
             const std::string & concept_name
             ) const;
 
-    EntitiesWithFact
+    std::shared_ptr<EntitiesWithFact>
     filterStr(
             const Entities & entities,
 
@@ -160,7 +167,7 @@ public:
             const std::string & string_value
             ) const;
 
-    EntitiesWithFact
+    std::shared_ptr<EntitiesWithFact>
     filterNum(
             const Entities & entities,
 
@@ -169,7 +176,7 @@ public:
             const std::string & op
             ) const;
 
-    EntitiesWithFact
+    std::shared_ptr<EntitiesWithFact>
     filterYear(
             const Entities & entities,
 
@@ -178,7 +185,7 @@ public:
             const std::string & op
             ) const;
 
-    EntitiesWithFact
+    std::shared_ptr<EntitiesWithFact>
     filterDate(
             const Entities & entities,
 
