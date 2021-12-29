@@ -48,12 +48,21 @@ public:
     static void parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & type_value_unit);
     static BaseValue* convertStringToValue(const std::string & value_in_string, unsigned short value_type);
 
+    template<typename SelfValueType, typename TargetValueType>
+    static bool compareWithOperator(const BaseValue * self_value, const BaseValue * compare_value, const std::string & op);
+
     virtual std::string toPrintStr() const = 0;
-    virtual std::string toStandardStr() const = 0;
+//    virtual std::string toStandardStr() const = 0;
 
     virtual bool valueCompare(const BaseValue* compare_value, const std::string & op) const = 0;
+
+    virtual ~BaseValue() = default;
 };
 
+class StringValue;
+class QuantityValue;
+class DateValue;
+class YearValue;
 
 class StringValue: public BaseValue {
 public:
@@ -70,7 +79,7 @@ public:
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
-    std::string toStandardStr() const override;
+//    std::string toStandardStr() const override;
 };
 
 
@@ -105,7 +114,7 @@ public:
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
-    std::string toStandardStr() const override;
+//    std::string toStandardStr() const override;
 
 };
 
@@ -148,10 +157,16 @@ public:
     bool operator <  (const DateValue & compare_value) const;
     bool operator >  (const DateValue & compare_value) const;
     bool operator != (const DateValue & compare_value) const;
+
+    bool operator == (const YearValue & compare_value) const;
+    bool operator <  (const YearValue & compare_value) const;
+    bool operator >  (const YearValue & compare_value) const;
+    bool operator != (const YearValue & compare_value) const;
+
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
-    std::string toStandardStr() const override;
+//    std::string toStandardStr() const override;
 };
 
 
@@ -168,10 +183,16 @@ public:
     bool operator <  (const YearValue & compare_value) const;
     bool operator >  (const YearValue & compare_value) const;
     bool operator != (const YearValue & compare_value) const;
+
+    bool operator == (const DateValue & compare_value) const;
+    bool operator <  (const DateValue & compare_value) const;
+    bool operator >  (const DateValue & compare_value) const;
+    bool operator != (const DateValue & compare_value) const;
+
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
-    std::string toStandardStr() const override;
+//    std::string toStandardStr() const override;
 };
 
 

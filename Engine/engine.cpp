@@ -161,11 +161,11 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         _all_entities.push_back((int)i);
     }
 
-//    examineEntityAttribute();
-//    examineRelation();
-//    examineAttributeKeyIndex();
-//    examineRelationIndex();
-//    examineEntityPairIndex();
+    examineEntityAttribute();
+    examineRelation();
+    examineAttributeKeyIndex();
+    examineRelationIndex();
+    examineEntityPairIndex();
 
     std::cout << "End of initialize a new KB\n";
 }
