@@ -99,6 +99,26 @@ BaseValue* BaseValue::convertStringToValue(const std::string & value_in_string, 
     return value_ptr;
 }
 
+template<typename SelfValueType, typename TargetValueType>
+bool BaseValue::compareWithOperator (const BaseValue * self_value, const BaseValue * compare_value, const std::string & op) {
+    if (op[0] == '=') {
+        return *((SelfValueType*)self_value) == *((TargetValueType*)compare_value);
+    }
+    else if (op == "<") {
+        return *((SelfValueType*)self_value) <  *((TargetValueType*)compare_value);
+    }
+    else if (op == ">") {
+        return *((SelfValueType*)self_value) >  *((TargetValueType*)compare_value);
+    }
+    else if (op[0] == '!') {
+        return *((SelfValueType*)self_value) != *((TargetValueType*)compare_value);
+    }
+    else {
+        std::cout << "Undefined operator " << op << std::endl;
+        exit(125);
+    }
+}
+
 bool StringValue::operator==(const StringValue & compare_value) const {
     return this -> value == compare_value.value;
 }
@@ -121,22 +141,10 @@ std::string StringValue::toPrintStr() const {
 
 bool StringValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
     if (compare_value -> type == string_type) {
-        if (op[0] == '=') {
-            return *this == *((StringValue*)compare_value);
-        }
-        else if (op == "<") {
-            return *this <  *((StringValue*)compare_value);
-        }
-        else if (op == ">") {
-            return *this >  *((StringValue*)compare_value);
-        }
-        else if (op[0] == '!') {
-            return *this != *((StringValue*)compare_value);
-        }
-        else {
-            std::cout << "Undefined operator " << op << std::endl;
-            exit(125);
-        }
+        return compareWithOperator<StringValue, StringValue>(this, compare_value, op);
+    }
+    else if (op[0] == '!') {
+        return true;
     }
     return false;
 }
@@ -172,22 +180,10 @@ std::string QuantityValue::toPrintStr() const {
 bool QuantityValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
     if ((compare_value -> type == int_type || compare_value -> type == float_type)
                                        && this -> unit == ((QuantityValue*)compare_value) -> unit) {
-        if (op[0] == '=') {
-            return *this == *((QuantityValue*)compare_value);
-        }
-        else if (op == "<") {
-            return *this <  *((QuantityValue*)compare_value);
-        }
-        else if (op == ">") {
-            return *this >  *((QuantityValue*)compare_value);
-        }
-        else if (op[0] == '!') {
-            return *this != *((QuantityValue*)compare_value);
-        }
-        else {
-            std::cout << "Undefined operator " << op << std::endl;
-            exit(125);
-        }
+        return compareWithOperator<QuantityValue, QuantityValue>(this, compare_value, op);
+    }
+    else if (op[0] == '!') {
+        return true;
     }
     return false;
 }
@@ -217,21 +213,44 @@ bool DateValue::operator!=(const DateValue & compare_value) const {
     return !(*this == compare_value);
 }
 
+
+
 std::string DateValue::toPrintStr() const {
     char date_str[200];
     sprintf(date_str, "%d-%d-%d", year, month, day);
     return std::string{date_str};
 }
 
+bool DateValue::operator==(const YearValue & compare_value) const {
+    return false;
+}
+
+bool DateValue::operator< (const YearValue & compare_value) const {
+    return year < compare_value.value;
+}
+
+bool DateValue::operator> (const YearValue & compare_value) const {
+    return year > compare_value.value;
+}
+
+bool DateValue::operator!=(const YearValue & compare_value) const {
+    return true;
+}
+
 bool DateValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
     if (compare_value -> type == date_type) {
-
+        return compareWithOperator<DateValue, DateValue>(this, compare_value, op);
     }
-    if (compare_value -> type == year_type) {
-
+    else if (compare_value -> type == year_type) {
+        return compareWithOperator<DateValue, YearValue>(this, compare_value, op);
+    }
+    else if (op[0] == '!') {
+        return true;
     }
     return false;
 }
+
+
 
 bool YearValue::operator==(const YearValue & compare_value) const {
     return this -> value == compare_value.value;
@@ -255,21 +274,30 @@ std::string YearValue::toPrintStr() const {
     return std::string{year_str};
 }
 
-bool YearValue::valueCompare(const YearValue & compare_value, const std::string & op) const {
-    if (op == "==") {
-        return *this == compare_value;
+bool YearValue::operator==(const DateValue & compare_value) const {
+    return value == compare_value.year;
+}
+
+bool YearValue::operator<(const DateValue & compare_value) const {
+    return value < compare_value.year;
+}
+
+bool YearValue::operator>(const DateValue & compare_value) const {
+    return value > compare_value.year;
+}
+
+bool YearValue::operator!=(const DateValue & compare_value) const {
+    return value != compare_value.year;
+}
+
+bool YearValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
+    if (compare_value -> type == year_type) {
+        return compareWithOperator<YearValue, YearValue>(this, compare_value, op);
     }
-    else if (op == "<") {
-        return *this < compare_value;
+    else if (compare_value -> type == date_type) {
+        return compareWithOperator<YearValue, DateValue>(this, compare_value, op);
     }
-    else if (op == ">") {
-        return *this > compare_value;
-    }
-    else if(op == "!=") {
-        return *this != compare_value;
-    }
-    else {
-        std::cout << "Undefined operator " << op << std::endl;
-        exit(124);
+    else if (op[0] == '!') {
+        return true;
     }
 }
