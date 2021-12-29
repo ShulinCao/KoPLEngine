@@ -271,27 +271,45 @@ public:
             const std::shared_ptr<std::vector<int>>& entity_list
             ) const;
 
-    BaseValue*
+    std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttr(
-            int entity_number,
+            const std::shared_ptr<std::vector<int>>& entity_list,
 
             const std::string & query_attribute_key
             ) const;
 
-    BaseValue*
+    std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttrUnderCondition(
-            int entity_number,
+            const std::shared_ptr<std::vector<int>>& entity_list,
 
             const std::string & query_attribute_key,
             const std::string & qualifier_key,
-            const std::string & qualifier_value
+            const std::shared_ptr<BaseValue>& qualifier_value
             ) const;
 
-    std::string
+    std::shared_ptr<std::vector<const std::string*>>
     queryRelation(
-            int entity_number_a,
-            int entity_number_b
+            const std::shared_ptr<std::vector<int>>& entity_list_a,
+            const std::shared_ptr<std::vector<int>>& entity_list_b
             ) const;
+
+    BaseValue*
+    queryAttrQualifier(
+            int entity_number,
+
+            const std::string & attribute_key,
+            const BaseValue* attribute_value,
+            const std::string & qualifier_key
+    ) const;
+
+    BaseValue*
+    queryRelationQualifier(
+            int entity_number_a,
+            int entity_number_b,
+
+            const std::string & relation,
+            const std::string & qualifier_key
+    ) const;
 
 
     int
@@ -339,25 +357,6 @@ public:
 
             const std::string & verify_date_value,
             const std::string & verify_date_op
-            ) const;
-
-
-    BaseValue*
-    queryAttrQualifier(
-            int entity_number,
-
-            const std::string & attribute_key,
-            const BaseValue* attribute_value,
-            const std::string & qualifier_key
-            ) const;
-
-    BaseValue*
-    queryRelationQualifier(
-            int entity_number_a,
-            int entity_number_b,
-
-            const std::string & relation,
-            const std::string & qualifier_key
             ) const;
 
     void programExec(std::vector<std::string> programs) const;
