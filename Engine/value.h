@@ -67,7 +67,6 @@ public:
     explicit StringValue(std::string val, unsigned short type = string_type): BaseValue(type), value(std::move(val)) {
         assert (type == string_type);
     };
-    explicit StringValue(std::string val) : BaseValue(string_type), value(std::move(val)) {};
 
     bool operator == (const StringValue & compare_value) const;
     bool operator <  (const StringValue & compare_value) const;
