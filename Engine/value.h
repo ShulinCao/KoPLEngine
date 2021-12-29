@@ -45,18 +45,13 @@ public:
     explicit BaseValue(unsigned short type = base_type) : type(type) {};
 
     static unsigned short convertJsonStringTypeToShort(const std::string &type_str, const json &val);
-    static void parseValue(BaseValue* & value_ptr, const json & type_value_unit);
+    static void parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & type_value_unit);
     static BaseValue* convertStringToValue(const std::string & value_in_string, unsigned short value_type);
-
-    static bool canCompare(const BaseValue* a, const BaseValue* b);
 
     virtual std::string toPrintStr() const = 0;
     virtual std::string toStandardStr() const = 0;
 
     virtual bool valueCompare(const BaseValue* compare_value, const std::string & op) const = 0;
-
-private:
-    virtual const std::string & _getUnit() const;
 };
 
 
@@ -112,8 +107,6 @@ public:
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
 
-private:
-    const std::string & _getUnit() const override;
 };
 
 
@@ -149,11 +142,6 @@ public:
                 begin = i + 1;
             }
         }
-
-//        std::cout << val << " " << year << " " << month << " " << day << std::endl;
-//        year  = atoi(val.substr(0, 4).c_str());
-//        month = atoi(val.substr(5, 2).c_str());
-//        day   = atoi(val.substr(8, 2).c_str());
     }
 
     bool operator == (const DateValue & compare_value) const;

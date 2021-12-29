@@ -5,7 +5,7 @@ void Engine::_parseQualifier(Qualifiers & qualifier_output, const json & qualifi
         std::string qualifier_key_string(qualifier.key());
 
         for (const auto& single_qualifier : qualifier.value()) {
-            BaseValue * val_ptr;
+            std::shared_ptr<BaseValue> val_ptr;
             BaseValue::parseValue(val_ptr, single_qualifier);
             qualifier_output[qualifier_key_string].push_back(val_ptr);
         }

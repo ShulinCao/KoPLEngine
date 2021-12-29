@@ -14,7 +14,7 @@
 
 using json = nlohmann::json;
 
-typedef     std::map<std::string, std::vector<BaseValue*>>      Qualifiers;
+typedef std::map<std::string, std::vector<std::shared_ptr<BaseValue>>> Qualifiers;
 
 enum RelationDirection{
     forward,
@@ -23,7 +23,7 @@ enum RelationDirection{
 
 
 typedef struct _Attribute{
-    BaseValue *                                                 attribute_value;
+    std::shared_ptr<BaseValue>                                  attribute_value;
     Qualifiers                                                  attribute_qualifiers;
 } Attribute;
 
