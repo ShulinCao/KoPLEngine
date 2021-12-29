@@ -239,7 +239,7 @@ void Engine::examineEntityPairIndex() const {
 }
 
 std::shared_ptr<Engine::EntitiesWithFact>
-Engine::_filter_attribute(const Engine::Entities & entities, const std::string &key, const BaseValue* value_to_compare) const {
+Engine::_filter_attribute(const Engine::Entities & entities, const std::string &key, const BaseValue* value_to_compare, const std::string & op) const {
     Engine::Entities return_entities;
     std::vector<BaseValue*> return_attrs;
 
@@ -247,7 +247,7 @@ Engine::_filter_attribute(const Engine::Entities & entities, const std::string &
         const auto & entity_attributes = _entity_attribute[ent];
         if (entity_attributes.find(key) != entity_attributes.end()) {
             for (const auto & entity_att : entity_attributes.at(key)) {
-                if (entity_att.attribute_value -> valueCompare(value_to_compare, "=").toBool()) {
+                if (entity_att.attribute_value -> valueCompare(value_to_compare, op).toBool()) {
                     return_entities.push_back(ent);
                     return_attrs.push_back(entity_att.attribute_value);
                 }
@@ -299,17 +299,8 @@ std::shared_ptr<Engine::EntitiesWithFact> Engine::filterStr(
         const Engine::Entities & entities,
         const std::string & string_key,
         const std::string & string_value) const {
-
-
-//    auto entities_has_attribute = std::set<int>();
-//    if (_attribute_key_to_entities.find(string_key) != _attribute_key_to_entities.end()) {
-//        entities_has_attribute = _attribute_key_to_entities.at(string_key);
-//    }
-    // TODO: Whether it is necessary to read the index? Temporarily add the index to the comments.
-    // TODO: Maybe we can construct a tree for the large set. Need a branch.
-
     auto value_to_compare = StringValue(string_value, BaseValue::string_type);
-    auto return_pairs = _filter_attribute(entities, string_key, &value_to_compare);
+    auto return_pairs = _filter_attribute(entities, string_key, &value_to_compare, "=");
     return return_pairs;
 }
 
@@ -317,7 +308,7 @@ std::shared_ptr<Engine::EntitiesWithFact>
 Engine::filterNum(const Engine::Entities &entities, const std::string &number_key, const std::string &number_value,
                   const std::string &op) const {
     auto value_to_compare = QuantityValue(number_value);
-    auto return_pairs = _filter_attribute(entities, number_key, &value_to_compare);
+    auto return_pairs = _filter_attribute(entities, number_key, &value_to_compare, op);
     return return_pairs;
 }
 
@@ -325,7 +316,7 @@ std::shared_ptr<Engine::EntitiesWithFact>
 Engine::filterYear(const Engine::Entities &entities, const std::string &year_key, const std::string &year_value,
                    const std::string &op) const {
     auto value_to_compare = YearValue(year_value);
-    auto return_pairs = _filter_attribute(entities, year_key, &value_to_compare);
+    auto return_pairs = _filter_attribute(entities, year_key, &value_to_compare, op);
     return return_pairs;
 }
 
@@ -333,8 +324,13 @@ std::shared_ptr<Engine::EntitiesWithFact>
 Engine::filterDate(const Engine::Entities &entities, const std::string &date_key, const std::string &date_value,
                    const std::string &op) const {
     auto value_to_compare = DateValue(date_value);
-    auto return_pairs = _filter_attribute(entities, date_key, &value_to_compare);
+    auto return_pairs = _filter_attribute(entities, date_key, &value_to_compare, op);
     return return_pairs;
+}
+
+std::shared_ptr<CompareResult> Engine::verifyStr(const StringValue &input_str_value, const std::string &verify_str_value) const {
+    auto value_to_compare = StringValue(verify_str_value);
+
 }
 
 

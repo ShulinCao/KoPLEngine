@@ -121,7 +121,8 @@ private:
             const Engine::Entities & entities,
 
             const std::string & key,
-            const BaseValue* value_to_compare
+            const BaseValue* value_to_compare,
+            const std::string & op
     ) const;
 public:
     explicit Engine(std::string & kb_file_name, int worker_num = 4);
@@ -294,7 +295,7 @@ public:
             ) const;
 
 
-    bool
+    std::shared_ptr<CompareResult>
     verifyStr(
             const StringValue & input_str_value,
 
