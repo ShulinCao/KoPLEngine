@@ -240,30 +240,27 @@ void Engine::examineEntityPairIndex() const {
 
 std::shared_ptr<Engine::EntitiesWithFact>
 Engine::_filter_attribute(const Engine::Entities & entities, const std::string &key, const BaseValue* value_to_compare, const std::string & op) const {
-    Engine::Entities return_entities;
-    std::vector<BaseValue*> return_attrs;
+    auto entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFact>();
 
     for (auto ent : entities) {
         const auto & entity_attributes = _entity_attribute[ent];
         if (entity_attributes.find(key) != entity_attributes.end()) {
             for (const auto & entity_att : entity_attributes.at(key)) {
                 if (entity_att.attribute_value -> valueCompare(value_to_compare, op)) {
-                    return_entities.push_back(ent);
-                    return_attrs.push_back(entity_att.attribute_value);
+                    entity_with_fact_ptr -> first.push_back(ent);
+                    entity_with_fact_ptr -> second.push_back(entity_att.attribute_value);
                 }
             }
         }
     }
-    auto return_pairs = std::make_shared<Engine::EntitiesWithFact>(return_entities, return_attrs);
-    return return_pairs;
+    return entity_with_fact_ptr;
 }
 
-template<typename ValueType>
 VerifyResult
-Engine::_verify(const std::shared_ptr<std::vector<std::shared_ptr<ValueType>>> &input_str_value, const BaseValue &verify_value,
+Engine::_verify(const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_str_value, const BaseValue &verify_value,
                 const std::string &verify_op) const {
     int match_num = 0;
-    for (auto attr_value : *input_str_value) {
+    for (const auto& attr_value : *input_str_value) {
         if (attr_value -> valueCompare(&verify_value, verify_op)) {
             match_num++;
         }
@@ -277,11 +274,13 @@ Engine::_verify(const std::shared_ptr<std::vector<std::shared_ptr<ValueType>>> &
     }
 }
 
-Engine::Entities Engine::findAll() const {
+Engine::Entities
+Engine::findAll() const {
     return _all_entities;
 }
 
-Engine::Entities Engine::find(const std::string & find_entity_name) const {
+Engine::Entities
+Engine::find(const std::string & find_entity_name) const {
     if (_entity_name_to_number.find(find_entity_name) != _entity_name_to_number.end()) {
         return _entity_name_to_number.at(find_entity_name);
     }
@@ -291,7 +290,8 @@ Engine::Entities Engine::find(const std::string & find_entity_name) const {
 
 }
 
-Engine::Entities Engine::filterConcept(
+Engine::Entities
+Engine::filterConcept(
         const Engine::Entities & entities,
         const std::string & concept_name) const {
 
@@ -314,7 +314,8 @@ Engine::Entities Engine::filterConcept(
     return output_entities;
 }
 
-std::shared_ptr<Engine::EntitiesWithFact> Engine::filterStr(
+std::shared_ptr<Engine::EntitiesWithFact>
+Engine::filterStr(
         const Engine::Entities & entities,
         const std::string & string_key,
         const std::string & string_value) const {
@@ -347,20 +348,44 @@ Engine::filterDate(const Engine::Entities &entities, const std::string &date_key
     return return_pairs;
 }
 
-
-
-std::shared_ptr<CompareResult>
-Engine::verifyNum(const QuantityValue &input_num_value, const std::string &verify_num_value,
-                  const std::string &verify_num_op) const {
-    auto value_to_compare = QuantityValue(verify_num_value);
-    return input_num_value.valueCompare(&value_to_compare, verify_num_op);
-}
-
-VerifyResult Engine::verifyStr(const std::shared_ptr<std::vector<std::shared_ptr<StringValue>>> &input_str_value,
+VerifyResult
+Engine::verifyStr(const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_str_value,
                                const std::string &verify_str_value) const {
     auto value_to_compare = StringValue(verify_str_value);
-    return _verify<StringValue>(input_str_value, value_to_compare, "=");
+    return _verify(input_str_value, value_to_compare, "=");
 }
+
+VerifyResult
+Engine::verifyNum(const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_num_value, const std::string &verify_num_value,
+                  const std::string &verify_num_op) const {
+    auto value_to_compare = QuantityValue(verify_num_value);
+    return _verify(input_num_value, value_to_compare, verify_num_op);
+}
+
+VerifyResult
+Engine::verifyYear(const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_year_value, const std::string &verify_year_value,
+                                const std::string &verify_year_op) const {
+    auto value_to_compare = YearValue(verify_year_value);
+    return _verify(input_year_value, value_to_compare, verify_year_op);
+}
+
+VerifyResult
+Engine::verifyDate(const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_date_value, const std::string &verify_date_value,
+                                const std::string &verify_date_op) const {
+    auto value_to_compare = DateValue(verify_date_value);
+    return _verify(input_date_value, value_to_compare, verify_date_op);
+}
+
+std::shared_ptr<std::vector<const std::string* >>
+Engine::queryName(const std::shared_ptr<std::vector<int>> & entity_list) const {
+    auto return_ptr = std::make_shared<std::vector<const std::string* >>();
+    for (auto entity_id : *entity_list) {
+        return_ptr -> push_back(&(_entity_name[entity_id]));
+    }
+    return return_ptr;
+}
+
+
 
 
 

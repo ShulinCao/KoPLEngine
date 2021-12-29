@@ -114,7 +114,7 @@ private:
 
     // Record all entities
     typedef std::vector<int>                                    Entities;
-    typedef std::pair<Entities, std::vector<BaseValue*>>        EntitiesWithFact;
+    typedef std::pair<Entities, std::vector<std::shared_ptr<BaseValue>>>        EntitiesWithFact;
     Entities                                                    _all_entities;
 
     // Record entities of each instance
@@ -131,10 +131,9 @@ private:
             const std::string & op
     ) const;
 
-    template<typename ValueType>
     VerifyResult
     _verify(
-            const std::shared_ptr<std::vector<std::shared_ptr<ValueType>>> &input_str_value,
+            const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_str_value,
             const BaseValue & verify_value,
             const std::string & verify_op
             ) const;
@@ -267,8 +266,10 @@ public:
     countOp(const Entities & entities) const;
 
 
-    std::string
-    queryName(int entity_number) const;
+    std::shared_ptr<std::vector<const std::string*>>
+    queryName(
+            const std::shared_ptr<std::vector<int>>& entity_list
+            ) const;
 
     BaseValue*
     queryAttr(
@@ -311,28 +312,30 @@ public:
 
     VerifyResult
     verifyStr(
-            const std::shared_ptr<std::vector<std::shared_ptr<StringValue>>> & input_str_value,
+            const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> & input_str_value,
 
             const std::string & verify_str_value
             ) const;
 
-    std::shared_ptr<CompareResult>
+    VerifyResult
     verifyNum(
-            const QuantityValue & input_num_value,
+            const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> & input_num_value,
 
             const std::string & verify_num_value,
             const std::string & verify_num_op
             ) const;
 
-    bool verifyYear(
-            const YearValue & input_year_value,
+    VerifyResult
+    verifyYear(
+            const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> & input_year_value,
 
             const std::string & verify_year_value,
             const std::string & verify_year_op
             ) const;
 
-    bool verifyDate(
-            const DateValue & input_date_value,
+    VerifyResult
+    verifyDate(
+            const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> & input_date_value,
 
             const std::string & verify_date_value,
             const std::string & verify_date_op
@@ -359,10 +362,6 @@ public:
 
     void programExec(std::vector<std::string> programs) const;
 
-    VerifyResult
-    _verify(const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_str_value,
-            const BaseValue &verify_value,
-            const std::string &verify_op) const;
 };
 
 
