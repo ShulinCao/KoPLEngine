@@ -53,7 +53,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 
 
     // Construct "_concept_id", "_concept_id_to_number", "_concept_name", "_concept_name_to_number"
-    for (auto & concept : concept_json.items()) {
+    for (const auto & concept : concept_json.items()) {
         std::string concept_id(concept.key());
         std::string concept_name(concept.value().at("name"));
 
@@ -65,7 +65,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     }
 
     // Construct "_concept_sub_class_of"
-    for (auto & c: concept_json.items()) {
+    for (const auto & c: concept_json.items()) {
         std::string concept_id(c.key());
         int cur_number = _concept_id_to_number[concept_id];
 
@@ -103,7 +103,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 
         // For "_entity_attribute"
         std::map<std::string, std::vector<Attribute>> ent_attrs;
-        for (auto attribute_json : entity.value().at("attributes")) {
+        for (const auto& attribute_json : entity.value().at("attributes")) {
             Attribute attribute;
             // obtain key
             auto attribute_key = attribute_json.at("key").get<std::string>();
@@ -173,7 +173,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 void Engine::examineEntityAttribute() const {
     for (std::size_t i = 0; i < _entity_name.size(); i++) {
         std::cout << "Name: " << _entity_name[i] << ", Taxonomy: ";
-        for (auto tax : _entity_is_instance_of[i]) {
+        for (const auto& tax : _entity_is_instance_of[i]) {
             std::cout << _concept_name[tax] << "|";
         }
         std::cout << std::endl;
@@ -242,7 +242,7 @@ std::shared_ptr<Engine::EntitiesWithFact>
 Engine::_filter_attribute(const Engine::Entities & entities, const std::string &key, const BaseValue* value_to_compare, const std::string & op) const {
     auto entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFact>();
 
-    for (auto ent : entities) {
+    for (const auto& ent : entities) {
         const auto & entity_attributes = _entity_attribute[ent];
         if (entity_attributes.find(key) != entity_attributes.end()) {
             for (const auto & entity_att : entity_attributes.at(key)) {
@@ -301,13 +301,13 @@ Engine::filterConcept(
     }
 
     std::set<int> entity_set;
-    for (auto concept_num : concept_numbers) {
+    for (const auto& concept_num : concept_numbers) {
         auto concept_inst = _concept_has_instance_entities.at(concept_num);
         entity_set.insert(concept_inst.begin(), concept_inst.end());
     }
 
     Engine::Entities  output_entities;
-    for (auto ent : entities) {
+    for (const auto& ent : entities) {
         if (entity_set.find(ent) != entity_set.end())   output_entities.push_back(ent);
     }
 
@@ -379,10 +379,56 @@ Engine::verifyDate(const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>
 std::shared_ptr<std::vector<const std::string* >>
 Engine::queryName(const std::shared_ptr<std::vector<int>> & entity_list) const {
     auto return_ptr = std::make_shared<std::vector<const std::string* >>();
-    for (auto entity_id : *entity_list) {
+    for (const auto& entity_id : *entity_list) {
         return_ptr -> push_back(&(_entity_name[entity_id]));
     }
     return return_ptr;
+}
+
+std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
+Engine::queryAttr(const std::shared_ptr<std::vector<int>>& entity_list, const std::string &query_attribute_key) const {
+    auto return_ptr = std::make_shared<std::vector<std::shared_ptr<BaseValue>>>();
+    for (const auto& entity_id : *entity_list) {
+        const auto & entity_attributes = _entity_attribute[entity_id];
+        if (entity_attributes.find(query_attribute_key) != entity_attributes.end()){
+            for (const auto & entity_att : entity_attributes.at(query_attribute_key)) {
+                return_ptr -> push_back(entity_att.attribute_value);
+            }
+        }
+    }
+    return return_ptr;
+}
+
+// TODO:
+std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
+Engine::queryAttrUnderCondition(const std::shared_ptr<std::vector<int>> &entity_list,
+                                const std::string &query_attribute_key, const std::string &qualifier_key,
+                                const std::shared_ptr<BaseValue>& qualifier_value) const {
+    auto return_ptr =  std::make_shared<std::vector<std::shared_ptr<BaseValue>>>();
+    for (const auto& entity_id : *entity_list) {
+        const auto & entity_attributes = _entity_attribute[entity_id];
+        if (entity_attributes.find(query_attribute_key) != entity_attributes.end()){
+            for (const auto & entity_att : entity_attributes.at(query_attribute_key)) {
+                const auto & qualifiers = entity_att.attribute_qualifiers;
+                bool find_flag = false;
+                for (const auto & qualifier_pair : qualifiers) {
+                    if (qualifier_pair.first != qualifier_key)     continue;
+                    for (const auto & q_value : qualifier_pair.second) {
+                        if (q_value -> valueCompare(qualifier_value, "=")) {
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+std::shared_ptr<std::vector<const std::string *>>
+Engine::queryRelation(const std::shared_ptr<std::vector<int>> &entity_list_a,
+                      const std::shared_ptr<std::vector<int>> &entity_list_b) const {
+    auto return_ptr =  std::make_shared<std::vector<const std::string *>>();
+
 }
 
 
