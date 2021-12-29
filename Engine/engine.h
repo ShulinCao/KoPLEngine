@@ -247,28 +247,28 @@ public:
             ) const;
 
     // TODO: may define these operators as static
-    Entities
+    static Entities
     relateOp(
             const Entities & entities,
 
             const std::string & relation_name,
             const std::string & relataion_direction
-            ) const;
+            );
 
-    Entities
+    static Entities
     andOp(
             const Entities & a,
             const Entities & b
-            ) const;
+            );
 
-    Entities
+    static Entities
     orOp(
             const Entities & a,
             const Entities & b
-            ) const;
+            );
 
-    int
-    countOp(const Entities & entities) const;
+    static int
+    countOp(const Entities & entities);
 
 
     std::shared_ptr<std::vector<const std::string*>>
