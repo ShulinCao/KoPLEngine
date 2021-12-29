@@ -136,6 +136,10 @@ std::string StringValue::toPrintStr() const {
     return std::string{value};
 }
 
+bool StringValue::valueCompare(const BaseValue *compare_value, const std::string &op) const {
+
+}
+
 bool StringValue::valueCompare(const StringValue & compare_value, const std::string & op) const {
     if (op == "==") {
         return *this == compare_value;
@@ -206,6 +210,7 @@ bool QuantityValue::valueCompare(const QuantityValue & compare_value, const std:
 const std::string & QuantityValue::_getUnit() const {
     return unit;
 }
+
 
 
 bool DateValue::operator==(const DateValue & compare_value) const {

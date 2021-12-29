@@ -23,7 +23,7 @@ public:
         if (bool_result)        compare_result = CompRes::yes;
         else                    compare_result = CompRes::no;
     }
-    bool toBool() {
+    bool toBool() const {
         if (compare_result == yes)      return true;            // true  for 'yes'
         else                            return false;           // false for 'no', and 'not_sure'
     }
@@ -53,7 +53,7 @@ public:
     virtual std::string toPrintStr() const = 0;
     virtual std::string toStandardStr() const = 0;
 
-    virtual std::shared_ptr<CompareResult> valueCompare(const BaseValue* compare_value, const std::string & op) const = 0;
+    virtual bool valueCompare(const BaseValue* compare_value, const std::string & op) const = 0;
 
 private:
     virtual const std::string & _getUnit() const;
@@ -72,7 +72,7 @@ public:
     bool operator <  (const StringValue & compare_value) const;
     bool operator >  (const StringValue & compare_value) const;
     bool operator != (const StringValue & compare_value) const;
-    std::shared_ptr<CompareResult> valueCompare(const BaseValue * compare_value, const std::string & op) const override;
+    bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
@@ -107,7 +107,7 @@ public:
     bool operator <  (const QuantityValue & compare_value) const;
     bool operator >  (const QuantityValue & compare_value) const;
     bool operator != (const QuantityValue & compare_value) const;
-    std::shared_ptr<CompareResult> valueCompare(const BaseValue * compare_value, const std::string & op) const override;
+    bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
@@ -160,7 +160,7 @@ public:
     bool operator <  (const DateValue & compare_value) const;
     bool operator >  (const DateValue & compare_value) const;
     bool operator != (const DateValue & compare_value) const;
-    std::shared_ptr<CompareResult> valueCompare(const BaseValue * compare_value, const std::string & op) const override;
+    bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
@@ -180,7 +180,7 @@ public:
     bool operator <  (const YearValue & compare_value) const;
     bool operator >  (const YearValue & compare_value) const;
     bool operator != (const YearValue & compare_value) const;
-    std::shared_ptr<CompareResult> valueCompare(const BaseValue * compare_value, const std::string & op) const override;
+    bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
