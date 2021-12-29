@@ -300,4 +300,5 @@ bool YearValue::valueCompare(const BaseValue * compare_value, const std::string 
     else if (op[0] == '!') {
         return true;
     }
+    return false;
 }

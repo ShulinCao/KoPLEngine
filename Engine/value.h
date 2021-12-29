@@ -52,9 +52,11 @@ public:
     static bool compareWithOperator(const BaseValue * self_value, const BaseValue * compare_value, const std::string & op);
 
     virtual std::string toPrintStr() const = 0;
-    virtual std::string toStandardStr() const = 0;
+//    virtual std::string toStandardStr() const = 0;
 
     virtual bool valueCompare(const BaseValue* compare_value, const std::string & op) const = 0;
+
+    virtual ~BaseValue() = default;
 };
 
 class StringValue;
@@ -77,7 +79,7 @@ public:
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
-    std::string toStandardStr() const override;
+//    std::string toStandardStr() const override;
 };
 
 
@@ -112,7 +114,7 @@ public:
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
-    std::string toStandardStr() const override;
+//    std::string toStandardStr() const override;
 
 };
 
@@ -164,7 +166,7 @@ public:
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
-    std::string toStandardStr() const override;
+//    std::string toStandardStr() const override;
 };
 
 
@@ -190,7 +192,7 @@ public:
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
-    std::string toStandardStr() const override;
+//    std::string toStandardStr() const override;
 };
 
 
