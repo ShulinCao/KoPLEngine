@@ -247,7 +247,7 @@ Engine::_filter_attribute(const Engine::Entities & entities, const std::string &
         const auto & entity_attributes = _entity_attribute[ent];
         if (entity_attributes.find(key) != entity_attributes.end()) {
             for (const auto & entity_att : entity_attributes.at(key)) {
-                if (entity_att.attribute_value -> valueCompare(value_to_compare, op).toBool()) {
+                if (entity_att.attribute_value -> valueCompare(value_to_compare, op)) {
                     return_entities.push_back(ent);
                     return_attrs.push_back(entity_att.attribute_value);
                 }
@@ -256,6 +256,25 @@ Engine::_filter_attribute(const Engine::Entities & entities, const std::string &
     }
     auto return_pairs = std::make_shared<Engine::EntitiesWithFact>(return_entities, return_attrs);
     return return_pairs;
+}
+
+template<typename ValueType>
+VerifyResult
+Engine::_verify(const std::shared_ptr<std::vector<std::shared_ptr<ValueType>>> &input_str_value, const BaseValue &verify_value,
+                const std::string &verify_op) const {
+    int match_num = 0;
+    for (auto attr_value : *input_str_value) {
+        if (attr_value -> valueCompare(&verify_value, verify_op)) {
+            match_num++;
+        }
+    }
+    if (match_num == int(input_str_value -> size())) {
+        return VerifyResult::yes;
+    } else if (match_num == 0) {
+        return VerifyResult::no;
+    } else {
+        return VerifyResult::not_sure;
+    }
 }
 
 Engine::Entities Engine::findAll() const {
@@ -328,10 +347,22 @@ Engine::filterDate(const Engine::Entities &entities, const std::string &date_key
     return return_pairs;
 }
 
-std::shared_ptr<CompareResult> Engine::verifyStr(const StringValue &input_str_value, const std::string &verify_str_value) const {
-    auto value_to_compare = StringValue(verify_str_value);
 
+
+std::shared_ptr<CompareResult>
+Engine::verifyNum(const QuantityValue &input_num_value, const std::string &verify_num_value,
+                  const std::string &verify_num_op) const {
+    auto value_to_compare = QuantityValue(verify_num_value);
+    return input_num_value.valueCompare(&value_to_compare, verify_num_op);
 }
+
+VerifyResult Engine::verifyStr(const std::shared_ptr<std::vector<std::shared_ptr<StringValue>>> &input_str_value,
+                               const std::string &verify_str_value) const {
+    auto value_to_compare = StringValue(verify_str_value);
+    return _verify<StringValue>(input_str_value, value_to_compare, "=");
+}
+
+
 
 
 

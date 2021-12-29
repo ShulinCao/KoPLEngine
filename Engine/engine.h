@@ -21,6 +21,11 @@ enum RelationDirection{
     backward
 };
 
+enum VerifyResult{
+    yes,
+    no,
+    not_sure
+};
 
 typedef struct _Attribute{
     BaseValue *                                                 attribute_value;
@@ -116,6 +121,7 @@ private:
     std::vector<std::set<int>>                                  _concept_has_instance_entities;
 
     static void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
+
     std::shared_ptr<EntitiesWithFact>
     _filter_attribute(
             const Engine::Entities & entities,
@@ -124,6 +130,14 @@ private:
             const BaseValue* value_to_compare,
             const std::string & op
     ) const;
+
+    template<typename ValueType>
+    VerifyResult
+    _verify(
+            const std::shared_ptr<std::vector<std::shared_ptr<ValueType>>> &input_str_value,
+            const BaseValue & verify_value,
+            const std::string & verify_op
+            ) const;
 public:
     explicit Engine(std::string & kb_file_name, int worker_num = 4);
 
@@ -295,14 +309,15 @@ public:
             ) const;
 
 
-    std::shared_ptr<CompareResult>
+    VerifyResult
     verifyStr(
-            const StringValue & input_str_value,
+            const std::shared_ptr<std::vector<std::shared_ptr<StringValue>>> & input_str_value,
 
             const std::string & verify_str_value
             ) const;
 
-    bool verifyNum(
+    std::shared_ptr<CompareResult>
+    verifyNum(
             const QuantityValue & input_num_value,
 
             const std::string & verify_num_value,
@@ -343,6 +358,11 @@ public:
             ) const;
 
     void programExec(std::vector<std::string> programs) const;
+
+    VerifyResult
+    _verify(const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_str_value,
+            const BaseValue &verify_value,
+            const std::string &verify_op) const;
 };
 
 
