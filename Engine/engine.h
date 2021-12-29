@@ -27,6 +27,11 @@ enum VerifyResult{
     not_sure
 };
 
+enum SelectOperator{
+    smallest,
+    largest
+};
+
 typedef struct _Attribute{
     std::shared_ptr<BaseValue>                                  attribute_value;
     Qualifiers                                                  attribute_qualifiers;
@@ -127,14 +132,14 @@ private:
             const Engine::Entities & entities,
 
             const std::string & key,
-            const BaseValue* value_to_compare,
+            const std::shared_ptr<BaseValue> & value_to_compare,
             const std::string & op
     ) const;
 
     VerifyResult
     _verify(
             const std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>> &input_str_value,
-            const BaseValue & verify_value,
+            const std::shared_ptr<BaseValue> & verify_value,
             const std::string & verify_op
             ) const;
 public:
@@ -293,38 +298,38 @@ public:
             const std::shared_ptr<std::vector<int>>& entity_list_b
             ) const;
 
-    BaseValue*
+    std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttrQualifier(
-            int entity_number,
+            const std::shared_ptr<std::vector<int>>& entity_list,
 
             const std::string & attribute_key,
-            const BaseValue* attribute_value,
+            const std::shared_ptr<BaseValue>& attribute_value,
             const std::string & qualifier_key
     ) const;
 
-    BaseValue*
+    std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryRelationQualifier(
-            int entity_number_a,
-            int entity_number_b,
+            const std::shared_ptr<std::vector<int>>& entity_list_a,
+            const std::shared_ptr<std::vector<int>>& entity_list_b,
 
-            const std::string & relation,
+            const std::string & relation_name,
             const std::string & qualifier_key
     ) const;
 
 
-    int
+    std::shared_ptr<std::vector<const std::string *>>
     selectAmong(
-            const Entities & entities,
+            const std::shared_ptr<std::vector<int>> & entities,
 
             const std::string & attribute_key,
-            const std::string & select_operator
+            const SelectOperator & select_operator
             ) const;
 
     int selectBetween(
             const Entities & entities,
 
             const std::string & attribute_key,
-            const std::string & select_operator
+            const SelectOperator & select_operator
             ) const;
 
 
