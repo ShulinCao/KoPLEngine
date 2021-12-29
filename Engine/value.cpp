@@ -30,7 +30,7 @@ unsigned short BaseValue::convertJsonStringTypeToShort(const std::string & type_
     }
 }
 
-void BaseValue::parseValue(BaseValue* & value_ptr, const json & type_value_unit) {
+void BaseValue::parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & type_value_unit) {
     std::string value_type_in_string(type_value_unit.at("type"));
     auto value_val = type_value_unit.at("value");
     auto value_type = convertJsonStringTypeToShort(value_type_in_string, value_val);
@@ -42,23 +42,23 @@ void BaseValue::parseValue(BaseValue* & value_ptr, const json & type_value_unit)
 
     if (value_type == string_type) {
         auto val = value_val.get<std::string>();
-        value_ptr = new StringValue(val, value_type);
+        value_ptr = std::shared_ptr<BaseValue>(new StringValue(val, value_type));
     }
     else if (value_type == int_type) {
         auto val = value_val.get<int>();
-        value_ptr = new QuantityValue(val, unit, value_type);
+        value_ptr = std::shared_ptr<BaseValue>(new QuantityValue(val, unit, value_type));
     }
     else if (value_type == float_type) {
         auto val = value_val.get<double>();
-        value_ptr = new QuantityValue(val, unit, value_type);
+        value_ptr = std::shared_ptr<BaseValue>(new QuantityValue(val, unit, value_type));
     }
     else if (value_type == date_type) {
         auto val = value_val.get<std::string>();
-        value_ptr = new DateValue(val, value_type);
+        value_ptr = std::shared_ptr<BaseValue>(new DateValue(val, value_type));
     }
     else if (value_type == year_type) {
         auto val = value_val.get<short>();
-        value_ptr = new YearValue(val, value_type);
+        value_ptr = std::shared_ptr<BaseValue>(new YearValue(val, value_type));
     }
     else {
         std::cout << "Type Error!\n";
@@ -99,23 +99,6 @@ BaseValue* BaseValue::convertStringToValue(const std::string & value_in_string, 
     return value_ptr;
 }
 
-bool BaseValue::canCompare(const BaseValue* a, const BaseValue* b) {
-    if (a -> type == string_type) {
-        return b -> type == string_type;
-    }
-    else if (a -> type == int_type || a -> type == float_type) {
-        return (b -> type == int_type || b -> type == float_type) && (a->_getUnit() == b->_getUnit());
-    }
-    else {
-        return (b -> type == year_type || b -> type == date_type);
-    }
-}
-
-const std::string & BaseValue::_getUnit() const {
-    std::cout << "Calling from Non-Quantitive value\n";
-    exit(1232);
-}
-
 bool StringValue::operator==(const StringValue & compare_value) const {
     return this -> value == compare_value.value;
 }
@@ -136,25 +119,27 @@ std::string StringValue::toPrintStr() const {
     return std::string{value};
 }
 
-bool StringValue::valueCompare(const StringValue & compare_value, const std::string & op) const {
-    if (op == "==") {
-        return *this == compare_value;
+bool StringValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
+    if (compare_value -> type == string_type) {
+        if (op[0] == '=') {
+            return *this == *((StringValue*)compare_value);
+        }
+        else if (op == "<") {
+            return *this <  *((StringValue*)compare_value);
+        }
+        else if (op == ">") {
+            return *this >  *((StringValue*)compare_value);
+        }
+        else if (op[0] == '!') {
+            return *this != *((StringValue*)compare_value);
+        }
+        else {
+            std::cout << "Undefined operator " << op << std::endl;
+            exit(125);
+        }
     }
-    else if (op == "<") {
-        return *this < compare_value;
-    }
-    else if (op == ">") {
-        return *this > compare_value;
-    }
-    else if(op == "!=") {
-        return *this != compare_value;
-    }
-    else {
-        std::cout << "Undefined operator " << op << std::endl;
-        exit(124);
-    }
+    return false;
 }
-
 
 bool QuantityValue::operator==(const QuantityValue & compare_value) const {
     return this -> value == compare_value.value;
@@ -184,27 +169,27 @@ std::string QuantityValue::toPrintStr() const {
     return std::string{quant_str};
 }
 
-bool QuantityValue::valueCompare(const QuantityValue & compare_value, const std::string & op) const {
-    if (op == "==") {
-        return *this == compare_value;
+bool QuantityValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
+    if ((compare_value -> type == int_type || compare_value -> type == float_type)
+                                       && this -> unit == ((QuantityValue*)compare_value) -> unit) {
+        if (op[0] == '=') {
+            return *this == *((QuantityValue*)compare_value);
+        }
+        else if (op == "<") {
+            return *this <  *((QuantityValue*)compare_value);
+        }
+        else if (op == ">") {
+            return *this >  *((QuantityValue*)compare_value);
+        }
+        else if (op[0] == '!') {
+            return *this != *((QuantityValue*)compare_value);
+        }
+        else {
+            std::cout << "Undefined operator " << op << std::endl;
+            exit(125);
+        }
     }
-    else if (op == "<") {
-        return *this < compare_value;
-    }
-    else if (op == ">") {
-        return *this > compare_value;
-    }
-    else if(op == "!=") {
-        return *this != compare_value;
-    }
-    else {
-        std::cout << "Undefined operator " << op << std::endl;
-        exit(124);
-    }
-}
-
-const std::string & QuantityValue::_getUnit() const {
-    return unit;
+    return false;
 }
 
 
@@ -238,25 +223,15 @@ std::string DateValue::toPrintStr() const {
     return std::string{date_str};
 }
 
-bool DateValue::valueCompare(const DateValue & compare_value, const std::string &op) const {
-    if (op == "==") {
-        return *this == compare_value;
-    }
-    else if (op == "<") {
-        return *this < compare_value;
-    }
-    else if (op == ">") {
-        return *this > compare_value;
-    }
-    else if(op == "!=") {
-        return *this != compare_value;
-    }
-    else {
-        std::cout << "Undefined operator " << op << std::endl;
-        exit(124);
-    }
-}
+bool DateValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
+    if (compare_value -> type == date_type) {
 
+    }
+    if (compare_value -> type == year_type) {
+
+    }
+    return false;
+}
 
 bool YearValue::operator==(const YearValue & compare_value) const {
     return this -> value == compare_value.value;

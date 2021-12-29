@@ -23,7 +23,7 @@ public:
         if (bool_result)        compare_result = CompRes::yes;
         else                    compare_result = CompRes::no;
     }
-    bool toBool() {
+    bool toBool() const {
         if (compare_result == yes)      return true;            // true  for 'yes'
         else                            return false;           // false for 'no', and 'not_sure'
     }
@@ -45,18 +45,13 @@ public:
     explicit BaseValue(unsigned short type = base_type) : type(type) {};
 
     static unsigned short convertJsonStringTypeToShort(const std::string &type_str, const json &val);
-    static void parseValue(BaseValue* & value_ptr, const json & type_value_unit);
+    static void parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & type_value_unit);
     static BaseValue* convertStringToValue(const std::string & value_in_string, unsigned short value_type);
-
-    static bool canCompare(const BaseValue* a, const BaseValue* b);
 
     virtual std::string toPrintStr() const = 0;
     virtual std::string toStandardStr() const = 0;
 
-    virtual CompareResult valueCompare(const BaseValue* compare_value, const std::string & op) const = 0;
-
-private:
-    virtual const std::string & _getUnit() const;
+    virtual bool valueCompare(const BaseValue* compare_value, const std::string & op) const = 0;
 };
 
 
@@ -72,7 +67,7 @@ public:
     bool operator <  (const StringValue & compare_value) const;
     bool operator >  (const StringValue & compare_value) const;
     bool operator != (const StringValue & compare_value) const;
-    CompareResult valueCompare(const BaseValue * compare_value, const std::string & op) const override;
+    bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
@@ -107,13 +102,11 @@ public:
     bool operator <  (const QuantityValue & compare_value) const;
     bool operator >  (const QuantityValue & compare_value) const;
     bool operator != (const QuantityValue & compare_value) const;
-    CompareResult valueCompare(const BaseValue * compare_value, const std::string & op) const override;
+    bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
 
-private:
-    const std::string & _getUnit() const override;
 };
 
 
@@ -149,18 +142,13 @@ public:
                 begin = i + 1;
             }
         }
-
-//        std::cout << val << " " << year << " " << month << " " << day << std::endl;
-//        year  = atoi(val.substr(0, 4).c_str());
-//        month = atoi(val.substr(5, 2).c_str());
-//        day   = atoi(val.substr(8, 2).c_str());
     }
 
     bool operator == (const DateValue & compare_value) const;
     bool operator <  (const DateValue & compare_value) const;
     bool operator >  (const DateValue & compare_value) const;
     bool operator != (const DateValue & compare_value) const;
-    CompareResult valueCompare(const BaseValue * compare_value, const std::string & op) const override;
+    bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
@@ -180,7 +168,7 @@ public:
     bool operator <  (const YearValue & compare_value) const;
     bool operator >  (const YearValue & compare_value) const;
     bool operator != (const YearValue & compare_value) const;
-    CompareResult valueCompare(const BaseValue * compare_value, const std::string & op) const override;
+    bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
     std::string toStandardStr() const override;
