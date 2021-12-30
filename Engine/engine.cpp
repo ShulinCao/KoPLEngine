@@ -122,6 +122,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     // Construct "_entity_relation"
     for (const auto & entity : entity_json.items()) {
         std::vector<Relation> relation;
+
         for (const auto & relation_json : entity.value().at("relations")) {
             auto relation_name_string(relation_json.at("relation").get<std::string>());
             auto relation_direction_string(relation_json.at("direction").get<std::string>());
@@ -150,12 +151,14 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             RelationIndex relation_index(relation_name_string, relation_direction);
             EntityPairIndex entity_pair_index((int)_entity_relation.size(), tail_entity_number);
 
-            _relation_to_entity_pair[relation_index].insert(entity_pair_index);
-            _entity_pair_to_relation[entity_pair_index].insert(relation_index);
+            _relation_to_entity_pair[relation_index].push_back(entity_pair_index);
+            _entity_pair_to_relation[entity_pair_index].push_back(relation_index);
+            _entity_forward_relation_index[entity_pair_index].push_back((int)relation.size() - 1);
         }
         _entity_relation.push_back(relation);
     }
 
+    // construct all entities
     _all_entities.reserve(total_entity_num);
     for (std::size_t i = 0; i < _entity_name.size(); i++) {
         _all_entities.push_back((int)i);
@@ -222,7 +225,6 @@ void Engine::examineRelation() const {
                 }
             }
         }
-
     }
 }
 
@@ -529,21 +531,23 @@ Engine::queryRelationQualifier(
         const std::shared_ptr<std::vector<int>> & entity_list_b,
         const std::string & relation_name,
         const std::string & qualifier_key) const {
-    auto return_ptr = std::make_shared<std::vector<std::shared_ptr<BaseValue>>>();
+    auto value_of_satisfied_qualifiers_ptr = std::make_shared<std::vector<std::shared_ptr<BaseValue>>>();
+
+    // enumerate over entity_list_a x entity_list_b
     for (const auto & entity_a : *entity_list_a) {
-        for (const auto & entity_b : *entity_list_b) {
-            EntityPairIndex entity_pair(entity_a, entity_b);
-            if (_entity_pair_to_relation.find(entity_pair) != _entity_pair_to_relation.end()) {
-                const auto & relations = _entity_pair_to_relation.at(entity_pair);
-                for (const auto & relation : relations) {
-                    if (relation.relation_name == relation_name) {
-                        // TODO
-                    }
-                }
-            }
-        }
-    }
-    return return_ptr;
+    for (const auto & entity_b : *entity_list_b) {
+        EntityPairIndex entity_pair(entity_a, entity_b);
+
+        // Find and enumerate over all relations between entity_a and entity_b
+        if (_entity_forward_relation_index.find(entity_pair) != _entity_forward_relation_index.end()) {
+        for (const auto & forward_relation_index: _entity_forward_relation_index.at(entity_pair)) {
+                const auto & relation = _entity_relation[entity_a][forward_relation_index];
+
+
+        }}
+    }}
+
+    return value_of_satisfied_qualifiers_ptr;
 }
 
 std::shared_ptr<std::vector<const std::string *>>
