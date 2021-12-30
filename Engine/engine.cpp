@@ -416,27 +416,27 @@ Engine::verifyDate(
 std::shared_ptr<std::vector<const std::string* >>
 Engine::queryName(
         const std::shared_ptr<std::vector<int>> & entity_list) const {
-    auto return_ptr = std::make_shared<std::vector<const std::string* >>();
+    auto name_ptr_vector_ptr = std::make_shared<std::vector<const std::string* >>();
     for (const auto & entity_id : *entity_list) {
-        return_ptr -> push_back(&(_entity_name[entity_id]));
+        name_ptr_vector_ptr -> push_back(&(_entity_name[entity_id]));
     }
-    return return_ptr;
+    return name_ptr_vector_ptr;
 }
 
 std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
 Engine::queryAttr(
         const std::shared_ptr<std::vector<int>> & entity_list,
         const std::string & query_attribute_key) const {
-    auto return_ptr = std::make_shared<std::vector<std::shared_ptr<BaseValue>>>();
+    auto base_value_ptr_vector_ptr = std::make_shared<std::vector<std::shared_ptr<BaseValue>>>();
     for (const auto& entity_id : *entity_list) {
         const auto & entity_attributes = _entity_attribute[entity_id];
         if (entity_attributes.find(query_attribute_key) != entity_attributes.end()){
             for (const auto & entity_att : entity_attributes.at(query_attribute_key)) {
-                return_ptr -> push_back(entity_att.attribute_value);
+                base_value_ptr_vector_ptr -> push_back(entity_att.attribute_value);
             }
         }
     }
-    return return_ptr;
+    return base_value_ptr_vector_ptr;
 }
 
 std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>

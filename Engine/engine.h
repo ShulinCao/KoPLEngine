@@ -284,19 +284,19 @@ public:
 
     std::shared_ptr<std::vector<const std::string*>>
     queryName(
-            const std::shared_ptr<std::vector<int>>& entity_list
+            const std::shared_ptr<std::vector<int>> & entity_list
             ) const;
 
     std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttr(
-            const std::shared_ptr<std::vector<int>>& entity_list,
+            const std::shared_ptr<std::vector<int>> & entity_list,
 
             const std::string & query_attribute_key
             ) const;
 
     std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttrUnderCondition(
-            const std::shared_ptr<std::vector<int>>& entity_list,
+            const std::shared_ptr<std::vector<int>> & entity_list,
 
             const std::string & query_attribute_key,
             const std::string & qualifier_key,
@@ -305,23 +305,23 @@ public:
 
     std::shared_ptr<std::vector<const std::string*>>
     queryRelation(
-            const std::shared_ptr<std::vector<int>>& entity_list_a,
-            const std::shared_ptr<std::vector<int>>& entity_list_b
+            const std::shared_ptr<std::vector<int>> & entity_list_a,
+            const std::shared_ptr<std::vector<int>> & entity_list_b
             ) const;
 
     std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttrQualifier(
-            const std::shared_ptr<std::vector<int>>& entity_list,
+            const std::shared_ptr<std::vector<int>> & entity_list,
 
             const std::string & attribute_key,
-            const std::shared_ptr<BaseValue>& attribute_value,
+            const std::shared_ptr<BaseValue> & attribute_value,
             const std::string & qualifier_key
     ) const;
 
     std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryRelationQualifier(
-            const std::shared_ptr<std::vector<int>>& entity_list_a,
-            const std::shared_ptr<std::vector<int>>& entity_list_b,
+            const std::shared_ptr<std::vector<int>> & entity_list_a,
+            const std::shared_ptr<std::vector<int>> & entity_list_b,
 
             const std::string & relation_name,
             const std::string & qualifier_key
