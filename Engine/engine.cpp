@@ -89,7 +89,10 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         _entity_id.push_back(entity_id);
         _entity_id_to_number[entity_id] = (int)_entity_id.size() - 1;
         _entity_name.push_back(entity_name);
-        _entity_name_to_number[entity_name].push_back((int)_entity_name.size() - 1);
+        if (_entity_name_to_number.find(entity_name) != _entity_name_to_number.end()) {
+            _entity_name_to_number[entity_name] = std::make_shared<Engine::Entities>();
+        }
+        _entity_name_to_number[entity_name] -> push_back((int)_entity_name.size() - 1);
 
         // For "_entity_is_instance_of"
         auto cur_entity_number = (int)_entity_name.size() - 1;
@@ -156,9 +159,10 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         _entity_relation.push_back(relation);
     }
 
-    _all_entities.reserve(total_entity_num);
+    _all_entities = std::make_shared<Entities>();
+    _all_entities -> reserve(total_entity_num);
     for (std::size_t i = 0; i < _entity_name.size(); i++) {
-        _all_entities.push_back((int)i);
+        _all_entities -> push_back((int)i);
     }
 
     examineEntityAttribute();
@@ -239,21 +243,29 @@ void Engine::examineEntityPairIndex() const {
 }
 
 
-
-
 std::shared_ptr<Engine::EntitiesWithFacts>
-Engine::_filter_qualifier(const std::shared_ptr<std::vector<EntitiesWithFacts>> & entity_with_fact,
+Engine::_filter_qualifier(const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
                           const std::string & filter_key,
-                          const std::string & filter_value,
-                          const std::string & op,
-                          const std::shared_ptr<BaseValue> & value_to_compare) const {
+                          const std::shared_ptr<BaseValue> & value_to_compare,
+                          const std::string & op) const {
     auto satisfy_entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFacts>();
-    for (auto entity_with_fact_pair : *entity_with_fact) {
-        auto entity = entity_with_fact_pair.first;
-        auto fact = entity_with_fact_pair.second;
-
-
+    assert(entity_with_fact -> first.size() == entity_with_fact -> second.size());
+    for (int i = 0; i < (int)(entity_with_fact -> first.size()); ++i) {
+        auto & entity_id = entity_with_fact -> first[i];
+        auto & attr = entity_with_fact -> second[i];
+        auto & qualifiers = attr -> attribute_qualifiers;
+        for (const auto & qualifier : qualifiers) {
+            if (qualifier.first == filter_key) {
+                for (const auto & qualifier_value : qualifier.second) {
+                    if (qualifier_value ->valueCompare(value_to_compare.get(), op)) {
+                        satisfy_entity_with_fact_ptr -> first.push_back(entity_id);
+                        satisfy_entity_with_fact_ptr -> second.push_back(attr);
+                    }
+                }
+            }
+        }
     }
+    return satisfy_entity_with_fact_ptr;
 }
 
 std::shared_ptr<Engine::EntitiesWithFacts>
@@ -303,12 +315,12 @@ Engine::_verify(
     }
 }
 
-Engine::Entities
+std::shared_ptr<Engine::Entities>
 Engine::findAll() const {
     return _all_entities;
 }
 
-Engine::Entities
+std::shared_ptr<Engine::Entities>
 Engine::find(const std::string & find_entity_name) const {
     if (_entity_name_to_number.find(find_entity_name) != _entity_name_to_number.end()) {
         return _entity_name_to_number.at(find_entity_name);
@@ -319,7 +331,7 @@ Engine::find(const std::string & find_entity_name) const {
 
 }
 
-Engine::Entities
+std::shared_ptr<Engine::Entities>
 Engine::filterConcept(
         const Engine::Entities & entities,
         const std::string & concept_name) const {
@@ -335,9 +347,9 @@ Engine::filterConcept(
         entity_set.insert(concept_inst.begin(), concept_inst.end());
     }
 
-    Engine::Entities  output_entities;
+    auto output_entities = std::make_shared<Engine::Entities>();
     for (const auto& ent : entities) {
-        if (entity_set.find(ent) != entity_set.end())   output_entities.push_back(ent);
+        if (entity_set.find(ent) != entity_set.end())   output_entities -> push_back(ent);
     }
 
     return output_entities;
@@ -609,6 +621,45 @@ Engine::selectAmong(
     }
 
     return return_ptr;
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::QfilterStr(
+        const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
+        const std::string & qualifier_string_key,
+        const std::string & qualifier_string_value) const {
+    auto value_to_compare = std::make_shared<StringValue>(qualifier_string_value);
+    return _filter_qualifier(entity_with_fact, qualifier_string_key, value_to_compare, "=");
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::QfilterNum(
+        const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
+        const std::string & qualifier_num_key,
+        const std::string & qualifier_num_value,
+        const std::string & op) const {
+    auto value_to_compare = std::make_shared<QuantityValue>(qualifier_num_value);
+    return _filter_qualifier(entity_with_fact, qualifier_num_key, value_to_compare, op);
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::QfilterYear(
+        const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
+        const std::string & qualifier_year_key,
+        const std::string & qualifier_year_value,
+        const std::string & op) const {
+    auto value_to_compare = std::make_shared<YearValue>(qualifier_year_value);
+    return _filter_qualifier(entity_with_fact, qualifier_year_key, value_to_compare, op);
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::QfilterDate(
+        const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
+        const std::string & qualifier_date_key,
+        const std::string & qualifier_date_value,
+        const std::string & op) const {
+    auto value_to_compare = std::make_shared<DateValue>(qualifier_date_value);
+    return _filter_qualifier(entity_with_fact, qualifier_date_key, value_to_compare, op);
 }
 
 

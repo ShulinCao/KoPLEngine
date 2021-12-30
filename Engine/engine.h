@@ -89,12 +89,17 @@ public:
 
 class Engine {
 private:
+
+    typedef std::vector<int>                                    Entities;
+    typedef std::vector<const Attribute*>                       Facts;      // we cannot use shared ptr, because the pointer will point to an existing memory block, which is not initiated by a smart pointer. Thus, the destruction of the fact will falsely destruct the memory block.
+    typedef std::pair<Entities, Facts>                          EntitiesWithFacts;
+
     int                                                         _worker_num;
 
     std::vector<std::string>                                    _concept_name;
     std::vector<std::string>                                    _entity_name;
     std::map<std::string, std::vector<int>>                     _concept_name_to_number;
-    std::map<std::string, std::vector<int>>                     _entity_name_to_number;
+    std::map<std::string, std::shared_ptr<Entities>>            _entity_name_to_number;
 
     std::vector<std::string>                                    _concept_id;
     std::vector<std::string>                                    _entity_id;
@@ -118,10 +123,7 @@ private:
     std::map<EntityPairIndex, std::set<RelationIndex>>          _entity_pair_to_relation;
 
     // Record all entities
-    typedef std::vector<int>                                    Entities;
-    typedef std::vector<const Attribute*>                       Facts;      // we cannot use shared ptr, because the pointer will point to an existing memory block, which is not initiated by a smart pointer. Thus, the destruction of the fact will falsely destruct the memory block.
-    typedef std::pair<Entities, Facts>                          EntitiesWithFacts;
-    Entities                                                    _all_entities;
+    std::shared_ptr<Entities>                                   _all_entities;
 
     // Record entities of each instance
     std::vector<std::set<int>>                                  _concept_has_instance_entities;
@@ -130,12 +132,11 @@ private:
 
     std::shared_ptr<EntitiesWithFacts>
     _filter_qualifier(
-            const std::shared_ptr<std::vector<EntitiesWithFacts>> & entity_with_fact,
+            const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & filter_key,
-            const std::string & filter_value,
-            const std::string & op,
-            const std::shared_ptr<BaseValue> & value_to_compare
+            const std::shared_ptr<BaseValue> & value_to_compare,
+            const std::string & op
     ) const;
 
     std::shared_ptr<EntitiesWithFacts>
@@ -172,17 +173,17 @@ public:
 
     // Use move semantic when assigning to an intermediate variable
     // TODO: may return const reference of Entities
-    Entities
+    std::shared_ptr<Entities>
     findAll() const;
 
     // TODO: may return const reference of Entities
-    Entities
+    std::shared_ptr<Entities>
     find(
             const std::string & find_entity_name
             ) const;
 
 
-    Entities
+    std::shared_ptr<Entities>
     filterConcept(
             const Entities & entities,
 
@@ -227,34 +228,37 @@ public:
 
     std::shared_ptr<EntitiesWithFacts>
     QfilterStr(
-            const std::shared_ptr<std::vector<EntitiesWithFacts>> & entity_with_fact,
+            const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & qualifier_string_key,
             const std::string & qualifier_string_value
             ) const;
 
-    std::vector<EntitiesWithFacts>
+    std::shared_ptr<EntitiesWithFacts>
     QfilterNum(
-            const std::vector<EntitiesWithFacts> & entity_with_fact,
+            const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & qualifier_num_key,
-            const std::string & qualifier_string_value
+            const std::string & qualifier_num_value,
+            const std::string & op
             ) const;
 
-    std::vector<EntitiesWithFacts>
+    std::shared_ptr<EntitiesWithFacts>
     QfilterYear(
-            const std::vector<EntitiesWithFacts> & entity_with_fact,
+            const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & qualifier_year_key,
-            const std::string & qualifier_year_value
+            const std::string & qualifier_year_value,
+            const std::string & op
             ) const;
 
-    std::vector<EntitiesWithFacts>
+    std::shared_ptr<EntitiesWithFacts>
     QfilterDate(
-            const std::vector<EntitiesWithFacts> & entity_with_fact,
+            const std::shared_ptr<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & qualifier_date_key,
-            const std::string & qualifier_date_value
+            const std::string & qualifier_date_value,
+            const std::string & op
             ) const;
 
     // TODO: may define these operators as static
