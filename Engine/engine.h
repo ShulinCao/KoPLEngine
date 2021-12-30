@@ -96,31 +96,46 @@ private:
 
     int                                                         _worker_num;
 
+    // Concept Name
     std::vector<std::string>                                    _concept_name;
-    std::vector<std::string>                                    _entity_name;
     std::map<std::string, std::vector<int>>                     _concept_name_to_number;
+
+    // Concept Wikidata ID
+    std::vector<std::string>                                    _concept_id;
+    std::map<std::string, int>                                  _concept_id_to_number;
+
+    // Entity Name
+    std::vector<std::string>                                    _entity_name;
     std::map<std::string, std::shared_ptr<Entities>>            _entity_name_to_number;
 
-    std::vector<std::string>                                    _concept_id;
+    // Entity Wikidata ID
     std::vector<std::string>                                    _entity_id;
-    std::map<std::string, int>                                  _concept_id_to_number;
     std::map<std::string, int>                                  _entity_id_to_number;
 
+    // TODO: Attribute Name
+    std::vector<std::string>                                    _attribute_name;
+    std::map<std::string, int>                                  _attribute_name_to_number;
 
+    // TODO: Relation Name
+    std::vector<std::string>                                    _relation_name;
+    std::map<std::string, int>                                  _relation_name_to_number;
+
+    // Sub Class Of, and Instance Of Relation
     std::vector<std::set<int>>                                  _concept_sub_class_of;
     std::vector<std::set<int>>                                  _entity_is_instance_of;
 
 
     std::vector<std::map<std::string, std::vector<Attribute>>>  _entity_attribute;
     std::vector<std::vector<Relation>>                          _entity_relation;
+    std::map<EntityPairIndex, std::vector<int>>                 _entity_forward_relation_index;
 
 
     // Record entities that have some attribute (not the attribute value)
     std::map<std::string, std::set<int>>                        _attribute_key_to_entities;
 
     // Record entities that are pointed to by the relation
-    std::map<RelationIndex, std::set<EntityPairIndex>>          _relation_to_entity_pair;
-    std::map<EntityPairIndex, std::set<RelationIndex>>          _entity_pair_to_relation;
+    std::map<RelationIndex, std::vector<EntityPairIndex>>        _relation_to_entity_pair;
+    std::map<EntityPairIndex, std::vector<RelationIndex>>        _entity_pair_to_relation;
 
     // Record all entities
     std::shared_ptr<Entities>                                   _all_entities;
