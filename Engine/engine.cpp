@@ -553,9 +553,19 @@ Engine::queryRelationQualifier(
         // Find and enumerate over all relations between entity_a and entity_b
         if (_entity_forward_relation_index.find(entity_pair) != _entity_forward_relation_index.end()) {
         for (const auto & forward_relation_index: _entity_forward_relation_index.at(entity_pair)) {
-                const auto & relation = _entity_relation[entity_a][forward_relation_index];
 
-
+            const auto & relation = _entity_relation[entity_a][forward_relation_index];
+            if (relation.relation_name == relation_name) {
+                for (const auto & qualifier_key_value_pair : relation.relation_qualifier) {
+                    const auto & qual_key = qualifier_key_value_pair.first;
+                    if (qual_key == qualifier_key) {
+                        value_of_satisfied_qualifiers_ptr -> insert(
+                                value_of_satisfied_qualifiers_ptr->end(),
+                                qualifier_key_value_pair.second.begin(),
+                                qualifier_key_value_pair.second.end());
+                    }
+                }
+            }
         }}
     }}
 
