@@ -256,13 +256,18 @@ Engine::_filter_attribute(
         const std::string & op) const {
     auto entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFacts>();
 
+    // enumerate over all entities
     for (const auto & ent : entities) {
         const auto & entity_attributes = _entity_attribute[ent];
+
+        // enumerate over all attributes with satisfying key
         if (entity_attributes.find(key) != entity_attributes.end()) {
             for (const auto & entity_att : entity_attributes.at(key)) {
+
+                // save the fact that satisfying the filtering condition
                 if (entity_att.attribute_value -> valueCompare(value_to_compare.get(), op)) {
                     entity_with_fact_ptr -> first.push_back(ent);
-                    entity_with_fact_ptr -> second.push_back(entity_att.attribute_value);
+                    entity_with_fact_ptr -> second.emplace_back(std::make_shared<const Attribute>(entity_att));
                 }
             }
         }

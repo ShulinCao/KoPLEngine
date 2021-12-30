@@ -119,7 +119,7 @@ private:
 
     // Record all entities
     typedef std::vector<int>                                    Entities;
-    typedef std::vector<std::shared_ptr<BaseValue>>             Facts;
+    typedef std::vector<std::shared_ptr<const Attribute>>       Facts;
     typedef std::pair<Entities, Facts>                          EntitiesWithFacts;
     Entities                                                    _all_entities;
 
