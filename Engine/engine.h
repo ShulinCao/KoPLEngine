@@ -156,7 +156,7 @@ private:
 
     std::shared_ptr<EntitiesWithFacts>
     _filter_attribute(
-            const Engine::Entities & entities,
+            const std::shared_ptr<Entities> & entity_ids,
 
             const std::string & key,
             const std::shared_ptr<BaseValue> & value_to_compare,
@@ -200,14 +200,14 @@ public:
 
     std::shared_ptr<Entities>
     filterConcept(
-            const Entities & entities,
+            const std::shared_ptr<Entities> &entity_ids,
 
             const std::string & concept_name
             ) const;
 
     std::shared_ptr<EntitiesWithFacts>
     filterStr(
-            const Entities & entities,
+            const std::shared_ptr<Entities> &entity_ids,
 
             const std::string & string_key,
             const std::string & string_value
@@ -215,7 +215,7 @@ public:
 
     std::shared_ptr<EntitiesWithFacts>
     filterNum(
-            const Entities & entities,
+            const std::shared_ptr<Entities> &entity_ids,
 
             const std::string & number_key,
             const std::string & number_value,
@@ -224,7 +224,7 @@ public:
 
     std::shared_ptr<EntitiesWithFacts>
     filterYear(
-            const Entities & entities,
+            const std::shared_ptr<Entities> &entity_ids,
 
             const std::string & year_key,
             const std::string & year_value,
@@ -233,7 +233,7 @@ public:
 
     std::shared_ptr<EntitiesWithFacts>
     filterDate(
-            const Entities & entities,
+            const std::shared_ptr<Entities> &entity_ids,
 
             const std::string & date_key,
             const std::string & date_value,
@@ -303,19 +303,19 @@ public:
 
     std::shared_ptr<std::vector<const std::string*>>
     queryName(
-            const std::shared_ptr<std::vector<int>> & entity_list
+            const std::shared_ptr<Entities> & entity_ids
             ) const;
 
     std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttr(
-            const std::shared_ptr<std::vector<int>> & entity_list,
+            const std::shared_ptr<Entities> & entity_ids,
 
             const std::string & query_attribute_key
             ) const;
 
     std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttrUnderCondition(
-            const std::shared_ptr<std::vector<int>> & entity_list,
+            const std::shared_ptr<Entities> & entity_ids,
 
             const std::string & query_attribute_key,
             const std::string & qualifier_key,
@@ -324,13 +324,13 @@ public:
 
     std::shared_ptr<std::vector<const std::string*>>
     queryRelation(
-            const std::shared_ptr<std::vector<int>> & entity_list_a,
-            const std::shared_ptr<std::vector<int>> & entity_list_b
+            const std::shared_ptr<Entities> & entity_ids_a,
+            const std::shared_ptr<Entities> & entity_ids_b
             ) const;
 
     std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryAttrQualifier(
-            const std::shared_ptr<std::vector<int>> & entity_list,
+            const std::shared_ptr<Entities> & entity_ids,
 
             const std::string & attribute_key,
             const std::shared_ptr<BaseValue> & attribute_value,
@@ -339,8 +339,8 @@ public:
 
     std::shared_ptr<std::vector<std::shared_ptr<BaseValue>>>
     queryRelationQualifier(
-            const std::shared_ptr<std::vector<int>> & entity_list_a,
-            const std::shared_ptr<std::vector<int>> & entity_list_b,
+            const std::shared_ptr<Entities> & entity_ids_a,
+            const std::shared_ptr<Entities> & entity_ids_b,
 
             const std::string & relation_name,
             const std::string & qualifier_key
@@ -349,7 +349,7 @@ public:
 
     std::shared_ptr<std::vector<const std::string *>>
     selectAmong(
-            const std::shared_ptr<std::vector<int>> & entities,
+            const std::shared_ptr<Entities> & entity_ids,
 
             const std::string & attribute_key,
             const SelectOperator & select_operator
