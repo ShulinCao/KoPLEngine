@@ -132,8 +132,8 @@ private:
     _filter_qualifier(
             const std::shared_ptr<std::vector<EntitiesWithFacts>> & entity_with_fact,
 
-            const std::string & tgt_key,
-            const std::string & tgt_value,
+            const std::string & filter_key,
+            const std::string & filter_value,
             const std::string & op,
             const std::shared_ptr<BaseValue> & value_to_compare
     ) const;

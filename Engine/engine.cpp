@@ -238,12 +238,20 @@ void Engine::examineEntityPairIndex() const {
 
 }
 
+
+
+
 std::shared_ptr<Engine::EntitiesWithFacts>
-Engine::_filter_qualifier(const std::shared_ptr<std::vector<EntitiesWithFacts>> &entity_with_fact,
-                          const std::string &tgt_key, const std::string &tgt_value, const std::string &op,
-                          const std::shared_ptr<BaseValue> &value_to_compare) const {
-    auto entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFacts>();
+Engine::_filter_qualifier(const std::shared_ptr<std::vector<EntitiesWithFacts>> & entity_with_fact,
+                          const std::string & filter_key,
+                          const std::string & filter_value,
+                          const std::string & op,
+                          const std::shared_ptr<BaseValue> & value_to_compare) const {
+    auto satisfy_entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFacts>();
     for (auto entity_with_fact_pair : *entity_with_fact) {
+        auto entity = entity_with_fact_pair.first;
+        auto fact = entity_with_fact_pair.second;
+
 
     }
 }
