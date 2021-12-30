@@ -21,21 +21,26 @@ enum RelationDirection{
     backward
 };
 
+
 enum VerifyResult{
     yes,
     no,
     not_sure
 };
 
+
 enum SelectOperator{
     smallest,
     largest
 };
 
+
+
 typedef struct _Attribute{
     std::shared_ptr<BaseValue>                                  attribute_value;
     Qualifiers                                                  attribute_qualifiers;
 } Attribute;
+
 
 typedef struct _Relation{
     std::string                                                 relation_name;
@@ -43,6 +48,7 @@ typedef struct _Relation{
     int                                                         relation_tail_entity;
     Qualifiers                                                  relation_qualifier;
 } Relation;
+
 
 
 class RelationIndex {
@@ -66,6 +72,7 @@ public:
     };
 };
 
+
 class EntityPairIndex {
 public:
     int                                                         head_entity;
@@ -86,6 +93,7 @@ public:
         head_entity(ent_pair.head_entity), tail_entity(ent_pair.tail_entity) {
     };
 };
+
 
 class Engine {
 private:
