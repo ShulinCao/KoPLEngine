@@ -238,15 +238,15 @@ void Engine::examineEntityPairIndex() const {
 
 }
 
-std::shared_ptr<Engine::EntitiesWithFact>
+std::shared_ptr<Engine::EntitiesWithFacts>
 Engine::_filter_attribute(
         const Engine::Entities & entities,
         const std::string & key,
         const std::shared_ptr<BaseValue> & value_to_compare,
         const std::string & op) const {
-    auto entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFact>();
+    auto entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFacts>();
 
-    for (const auto& ent : entities) {
+    for (const auto & ent : entities) {
         const auto & entity_attributes = _entity_attribute[ent];
         if (entity_attributes.find(key) != entity_attributes.end()) {
             for (const auto & entity_att : entity_attributes.at(key)) {
@@ -320,7 +320,7 @@ Engine::filterConcept(
     return output_entities;
 }
 
-std::shared_ptr<Engine::EntitiesWithFact>
+std::shared_ptr<Engine::EntitiesWithFacts>
 Engine::filterStr(
         const Engine::Entities & entities,
         const std::string & string_key,
@@ -330,7 +330,7 @@ Engine::filterStr(
     return return_pairs;
 }
 
-std::shared_ptr<Engine::EntitiesWithFact>
+std::shared_ptr<Engine::EntitiesWithFacts>
 Engine::filterNum(
         const Engine::Entities & entities,
         const std::string & number_key,
@@ -341,7 +341,7 @@ Engine::filterNum(
     return return_pairs;
 }
 
-std::shared_ptr<Engine::EntitiesWithFact>
+std::shared_ptr<Engine::EntitiesWithFacts>
 Engine::filterYear(
         const Engine::Entities & entities,
         const std::string & year_key,
@@ -352,7 +352,7 @@ Engine::filterYear(
     return return_pairs;
 }
 
-std::shared_ptr<Engine::EntitiesWithFact>
+std::shared_ptr<Engine::EntitiesWithFacts>
 Engine::filterDate(
         const Engine::Entities & entities,
         const std::string & date_key,

@@ -119,7 +119,8 @@ private:
 
     // Record all entities
     typedef std::vector<int>                                    Entities;
-    typedef std::pair<Entities, std::vector<std::shared_ptr<BaseValue>>>        EntitiesWithFact;
+    typedef std::vector<std::shared_ptr<BaseValue>>             Facts;
+    typedef std::pair<Entities, Facts>                          EntitiesWithFacts;
     Entities                                                    _all_entities;
 
     // Record entities of each instance
@@ -127,7 +128,7 @@ private:
 
     static void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
 
-    std::shared_ptr<EntitiesWithFact>
+    std::shared_ptr<EntitiesWithFacts>
     _filter_attribute(
             const Engine::Entities & entities,
 
@@ -178,7 +179,7 @@ public:
             const std::string & concept_name
             ) const;
 
-    std::shared_ptr<EntitiesWithFact>
+    std::shared_ptr<EntitiesWithFacts>
     filterStr(
             const Entities & entities,
 
@@ -186,7 +187,7 @@ public:
             const std::string & string_value
             ) const;
 
-    std::shared_ptr<EntitiesWithFact>
+    std::shared_ptr<EntitiesWithFacts>
     filterNum(
             const Entities & entities,
 
@@ -195,7 +196,7 @@ public:
             const std::string & op
             ) const;
 
-    std::shared_ptr<EntitiesWithFact>
+    std::shared_ptr<EntitiesWithFacts>
     filterYear(
             const Entities & entities,
 
@@ -204,7 +205,7 @@ public:
             const std::string & op
             ) const;
 
-    std::shared_ptr<EntitiesWithFact>
+    std::shared_ptr<EntitiesWithFacts>
     filterDate(
             const Entities & entities,
 
@@ -214,33 +215,33 @@ public:
             ) const;
 
 
-    EntitiesWithFact
+    EntitiesWithFacts
     QfilterStr(
-            const std::vector<EntitiesWithFact> & entity_with_fact,
+            const std::vector<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & qualifier_string_key,
             const std::string & qualifier_string_value
             ) const;
 
-    std::vector<EntitiesWithFact>
+    std::vector<EntitiesWithFacts>
     QfilterNum(
-            const std::vector<EntitiesWithFact> & entity_with_fact,
+            const std::vector<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & qualifier_num_key,
             const std::string & qualifier_string_value
             ) const;
 
-    std::vector<EntitiesWithFact>
+    std::vector<EntitiesWithFacts>
     QfilterYear(
-            const std::vector<EntitiesWithFact> & entity_with_fact,
+            const std::vector<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & qualifier_year_key,
             const std::string & qualifier_year_value
             ) const;
 
-    std::vector<EntitiesWithFact>
+    std::vector<EntitiesWithFacts>
     QfilterDate(
-            const std::vector<EntitiesWithFact> & entity_with_fact,
+            const std::vector<EntitiesWithFacts> & entity_with_fact,
 
             const std::string & qualifier_date_key,
             const std::string & qualifier_date_value
