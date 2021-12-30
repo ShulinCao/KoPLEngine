@@ -42,23 +42,23 @@ void BaseValue::parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & 
 
     if (value_type == string_type) {
         auto val = value_val.get<std::string>();
-        value_ptr = std::shared_ptr<BaseValue>(new StringValue(val, value_type));
+        value_ptr = std::make_shared<StringValue>(val, value_type);
     }
     else if (value_type == int_type) {
         auto val = value_val.get<int>();
-        value_ptr = std::shared_ptr<BaseValue>(new QuantityValue(val, unit, value_type));
+        value_ptr = std::make_shared<QuantityValue>(val, unit, value_type);
     }
     else if (value_type == float_type) {
         auto val = value_val.get<double>();
-        value_ptr = std::shared_ptr<BaseValue>(new QuantityValue(val, unit, value_type));
+        value_ptr = std::make_shared<QuantityValue>(val, unit, value_type);
     }
     else if (value_type == date_type) {
         auto val = value_val.get<std::string>();
-        value_ptr = std::shared_ptr<BaseValue>(new DateValue(val, value_type));
+        value_ptr = std::make_shared<DateValue>(val, value_type);
     }
     else if (value_type == year_type) {
         auto val = value_val.get<short>();
-        value_ptr = std::shared_ptr<BaseValue>(new YearValue(val, value_type));
+        value_ptr = std::make_shared<YearValue>(val, value_type);
     }
     else {
         std::cout << "Type Error!\n";

@@ -267,7 +267,7 @@ Engine::_filter_attribute(
                 // save the fact that satisfying the filtering condition
                 if (entity_att.attribute_value -> valueCompare(value_to_compare.get(), op)) {
                     entity_with_fact_ptr -> first.push_back(ent);
-                    entity_with_fact_ptr -> second.emplace_back(std::make_shared<const Attribute>(entity_att));
+                    entity_with_fact_ptr -> second.push_back(&entity_att);
                 }
             }
         }
@@ -281,7 +281,7 @@ Engine::_verify(
         const std::shared_ptr<BaseValue> & verify_value,
         const std::string & verify_op) const {
     int match_num = 0;
-    for (const auto& attr_value : *input_str_value) {
+    for (const auto & attr_value : *input_str_value) {
         if (attr_value -> valueCompare(verify_value.get(), verify_op)) {
             match_num++;
         }
@@ -417,7 +417,7 @@ std::shared_ptr<std::vector<const std::string* >>
 Engine::queryName(
         const std::shared_ptr<std::vector<int>> & entity_list) const {
     auto return_ptr = std::make_shared<std::vector<const std::string* >>();
-    for (const auto& entity_id : *entity_list) {
+    for (const auto & entity_id : *entity_list) {
         return_ptr -> push_back(&(_entity_name[entity_id]));
     }
     return return_ptr;
