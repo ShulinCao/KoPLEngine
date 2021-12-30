@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <algorithm>
 #include <nlohmann/json.hpp>
 #include "value.h"
 
@@ -285,28 +286,28 @@ public:
             ) const;
 
     // TODO: may define these operators as static
-    static Entities
+    std::shared_ptr<Entities>
     relateOp(
-            const Entities & entities,
+            const std::shared_ptr<Entities> & entities,
 
             const std::string & relation_name,
-            const std::string & relataion_direction
+            const std::string & relation_direction
             );
 
-    static Entities
+    static std::shared_ptr<Entities>
     andOp(
-            const Entities & a,
-            const Entities & b
+            const std::shared_ptr<Entities> & a,
+            const std::shared_ptr<Entities> & b
             );
 
-    static Entities
+    static std::shared_ptr<Entities>
     orOp(
-            const Entities & a,
-            const Entities & b
+            const std::shared_ptr<Entities> & a,
+            const std::shared_ptr<Entities> & b
             );
 
     static int
-    countOp(const Entities & entities);
+    countOp(const std::shared_ptr<Entities> & entities);
 
 
     std::shared_ptr<std::vector<const std::string*>>

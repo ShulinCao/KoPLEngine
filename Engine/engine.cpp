@@ -676,7 +676,64 @@ Engine::QfilterDate(
     return _filter_qualifier(entity_with_fact, qualifier_date_key, value_to_compare, op);
 }
 
+std::shared_ptr<Engine::Entities> Engine::relateOp(
+        const std::shared_ptr<Entities> & entities,
+        const std::string & relation_name,
+        const std::string & relation_direction) {
 
+    RelationDirection rel_dir;
+    if (relation_direction == "forward") {
+        rel_dir = RelationDirection::forward;
+    }
+    else if (relation_direction == "backward") {
+        rel_dir = RelationDirection::backward;
+    }
+    else {
+        std::cout << "Relation Direction Error!\n";
+        exit(125);
+    }
+
+    auto related_entities_ptr = std::make_shared<Entities>();
+
+    for (const auto & entity : *entities) {
+        for (const auto & relation : _entity_relation[entity]) {
+            if (relation.relation_direction == rel_dir && relation.relation_name == relation_name) {
+                related_entities_ptr->push_back(relation.relation_tail_entity);
+            }
+        }
+    }
+
+    return related_entities_ptr;
+}
+
+std::shared_ptr<Engine::Entities> Engine::andOp(
+        const std::shared_ptr<Entities> & a,
+        const std::shared_ptr<Entities> & b) {
+    auto intersection_entities_ptr = std::make_shared<Entities>();
+
+    std::sort(a -> begin(), a -> end());
+    std::sort(b -> begin(), b -> end());
+    std::set_intersection(a -> begin(), a -> end(), b -> begin(), b -> end(), intersection_entities_ptr -> begin());
+
+    return intersection_entities_ptr;
+}
+
+std::shared_ptr<Engine::Entities> Engine::orOp(
+        const std::shared_ptr<Entities> & a,
+        const std::shared_ptr<Entities> & b) {
+    auto union_entities_ptr = std::make_shared<Entities>();
+
+    std::sort(a -> begin(), a -> end());
+    std::sort(b -> begin(), b -> end());
+    std::set_union(a -> begin(), a -> end(), b -> begin(), b -> end(), union_entities_ptr -> begin());
+
+    return union_entities_ptr;
+}
+
+int Engine::countOp(
+        const std::shared_ptr<Entities> & entities) {
+    return (int)(entities -> size());
+}
 
 
 
