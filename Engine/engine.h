@@ -128,6 +128,16 @@ private:
     static void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
 
     std::shared_ptr<EntitiesWithFact>
+    _filter_qualifier(
+            const std::shared_ptr<std::vector<EntitiesWithFact>> & entity_with_fact,
+
+            const std::string & tgt_key,
+            const std::string & tgt_value,
+            const std::string & op,
+            const std::shared_ptr<BaseValue> & value_to_compare
+    ) const;
+
+    std::shared_ptr<EntitiesWithFact>
     _filter_attribute(
             const Engine::Entities & entities,
 
@@ -214,9 +224,9 @@ public:
             ) const;
 
 
-    EntitiesWithFact
+    std::shared_ptr<EntitiesWithFact>
     QfilterStr(
-            const std::vector<EntitiesWithFact> & entity_with_fact,
+            const std::shared_ptr<std::vector<EntitiesWithFact>> & entity_with_fact,
 
             const std::string & qualifier_string_key,
             const std::string & qualifier_string_value
@@ -325,12 +335,12 @@ public:
             const SelectOperator & select_operator
             ) const;
 
-    int selectBetween(
-            const Entities & entities,
-
-            const std::string & attribute_key,
-            const SelectOperator & select_operator
-            ) const;
+//    int selectBetween(
+//            const Entities & entities,
+//
+//            const std::string & attribute_key,
+//            const SelectOperator & select_operator
+//            ) const;
 
 
     VerifyResult

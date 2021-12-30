@@ -239,6 +239,16 @@ void Engine::examineEntityPairIndex() const {
 }
 
 std::shared_ptr<Engine::EntitiesWithFact>
+Engine::_filter_qualifier(const std::shared_ptr<std::vector<EntitiesWithFact>> &entity_with_fact,
+                          const std::string &tgt_key, const std::string &tgt_value, const std::string &op,
+                          const std::shared_ptr<BaseValue> &value_to_compare) const {
+    auto entity_with_fact_ptr = std::make_shared<Engine::EntitiesWithFact>();
+    for (auto entity_with_fact_pair : *entity_with_fact) {
+
+    }
+}
+
+std::shared_ptr<Engine::EntitiesWithFact>
 Engine::_filter_attribute(
         const Engine::Entities & entities,
         const std::string & key,
@@ -587,6 +597,8 @@ Engine::selectAmong(
 
     return return_ptr;
 }
+
+
 
 
 
