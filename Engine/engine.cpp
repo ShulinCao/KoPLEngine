@@ -89,8 +89,8 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         _entity_id.push_back(entity_id);
         _entity_id_to_number[entity_id] = (int)_entity_id.size() - 1;
         _entity_name.push_back(entity_name);
-        if (_entity_name_to_number.find(entity_name) != _entity_name_to_number.end()) {
-            _entity_name_to_number[entity_name] = std::make_shared<Engine::Entities>();
+        if (_entity_name_to_number.find(entity_name) == _entity_name_to_number.end()) {
+            _entity_name_to_number[entity_name] = std::make_shared<Entities>();
         }
         _entity_name_to_number[entity_name] -> push_back((int)_entity_name.size() - 1);
 
@@ -168,11 +168,11 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         _all_entities -> push_back((int)i);
     }
 
-    examineEntityAttribute();
-    examineRelation();
-    examineAttributeKeyIndex();
-    examineRelationIndex();
-    examineEntityPairIndex();
+//    examineEntityAttribute();
+//    examineRelation();
+//    examineAttributeKeyIndex();
+//    examineRelationIndex();
+//    examineEntityPairIndex();
 
     std::cout << "End of initialize a new KB\n";
 }
@@ -328,7 +328,7 @@ Engine::find(const std::string & find_entity_name) const {
         return _entity_name_to_number.at(find_entity_name);
     }
     else {
-        return {};
+        return std::make_shared<Entities>();
     }
 
 }
@@ -578,9 +578,9 @@ Engine::selectAmong(
         const std::string & attribute_key,
         const SelectOperator & select_operator) const {
     auto return_ptr = std::make_shared<std::vector<const std::string *>>();
+
     std::set<int> entities_set(entity_ids -> begin(), entity_ids -> end());
     std::vector<std::pair<int, std::shared_ptr<BaseValue>>> candidates;
-    std::map<std::string, int> unit_cnt;
 
     for (const auto & entity_id : entities_set) {
         const auto & entity_attributes = _entity_attribute[entity_id];
@@ -593,9 +593,10 @@ Engine::selectAmong(
         }
     }
 
+    std::map<std::string, int> unit_cnt;
     for (const auto & candidate_pair : candidates) {
         auto & unit = ((QuantityValue*)(candidate_pair.second.get())) -> unit;
-        if (unit_cnt.find(unit) != unit_cnt.end()) {
+        if (unit_cnt.find(unit) == unit_cnt.end()) {
             unit_cnt[unit] = 0;
         }
         unit_cnt[unit]++;
@@ -711,9 +712,10 @@ std::shared_ptr<Engine::Entities> Engine::andOp(
         const std::shared_ptr<Entities> & b) {
     auto intersection_entities_ptr = std::make_shared<Entities>();
 
+
     std::sort(a -> begin(), a -> end());
     std::sort(b -> begin(), b -> end());
-    std::set_intersection(a -> begin(), a -> end(), b -> begin(), b -> end(), intersection_entities_ptr -> begin());
+    std::set_intersection(a -> begin(), a -> end(), b -> begin(), b -> end(), std::back_inserter(*intersection_entities_ptr));
 
     return intersection_entities_ptr;
 }
@@ -725,7 +727,7 @@ std::shared_ptr<Engine::Entities> Engine::orOp(
 
     std::sort(a -> begin(), a -> end());
     std::sort(b -> begin(), b -> end());
-    std::set_union(a -> begin(), a -> end(), b -> begin(), b -> end(), union_entities_ptr -> begin());
+    std::set_union(a -> begin(), a -> end(), b -> begin(), b -> end(), std::back_inserter(*union_entities_ptr));
 
     return union_entities_ptr;
 }

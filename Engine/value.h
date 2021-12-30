@@ -126,7 +126,7 @@ public:
     short day = -1;
 
     explicit DateValue(const std::string & val, unsigned short type = date_type) : BaseValue(type) {
-        assert (type == date_type && val.length() == 10);
+        assert (type == date_type);
 
         size_t begin = 0;
         for (size_t i = 0; i < val.size(); i++) {
