@@ -361,15 +361,17 @@ public:
             const std::shared_ptr<Entities> & entity_ids,
 
             const std::string & attribute_key,
-            const SelectOperator & select_operator
+            const std::string & select_op
             ) const;
 
-//    int selectBetween(
-//            const Entities & entities,
-//
-//            const std::string & attribute_key,
-//            const SelectOperator & select_operator
-//            ) const;
+    std::shared_ptr<std::vector<const std::string *>>
+    selectBetween(
+            const std::shared_ptr<Entities> & entity_ids_a,
+            const std::shared_ptr<Entities> & entity_ids_b,
+
+            const std::string & attribute_key,
+            const std::string & select_op
+            ) const;
 
 
     VerifyResult

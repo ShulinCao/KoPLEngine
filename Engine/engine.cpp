@@ -576,8 +576,20 @@ std::shared_ptr<std::vector<const std::string *>>
 Engine::selectAmong(
         const std::shared_ptr<Entities> & entity_ids,
         const std::string & attribute_key,
-        const SelectOperator & select_operator) const {
+        const std::string & select_op) const {
     auto return_ptr = std::make_shared<std::vector<const std::string *>>();
+
+    SelectOperator select_operator;
+    if (select_op == "less") {
+        select_operator = SelectOperator::smallest;
+    }
+    else if (select_op == "more") {
+        select_operator = SelectOperator::largest;
+    }
+    else {
+        std::cout << "Unsupported Operator\n";
+        exit(234);
+    }
 
     std::set<int> entities_set(entity_ids -> begin(), entity_ids -> end());
     std::vector<std::pair<int, std::shared_ptr<BaseValue>>> candidates;
@@ -637,6 +649,24 @@ Engine::selectAmong(
 
     return return_ptr;
 }
+
+
+
+std::shared_ptr<std::vector<const std::string *>>
+Engine::selectBetween(
+        const std::shared_ptr<Entities> & entity_ids_a,
+        const std::shared_ptr<Entities> & entity_ids_b,
+        const std::string & attribute_key,
+        const std::string & select_op) const {
+
+    auto compare_among_entities = std::make_shared<Entities>();
+    compare_among_entities -> insert(compare_among_entities -> end(), entity_ids_a -> begin(), entity_ids_a -> end());
+    compare_among_entities -> insert(compare_among_entities -> end(), entity_ids_b -> begin(), entity_ids_b -> end());
+
+
+    return selectAmong(compare_among_entities, attribute_key, select_op);
+}
+
 
 std::shared_ptr<Engine::EntitiesWithFacts>
 Engine::QfilterStr(
