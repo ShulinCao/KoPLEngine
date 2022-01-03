@@ -61,3 +61,4 @@ Engine/cmake-build-saber
 .idea
 
 Engine/kb.json
+Engine/*.json

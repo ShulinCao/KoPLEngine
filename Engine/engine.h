@@ -97,11 +97,13 @@ public:
 
 
 class Engine {
-private:
+public:
 
     typedef std::vector<int>                                    Entities;
     typedef std::vector<const Attribute*>                       Facts;      // we cannot use shared ptr, because the pointer will point to an existing memory block, which is not initiated by a smart pointer. Thus, the destruction of the fact will falsely destruct the memory block.
     typedef std::pair<Entities, Facts>                          EntitiesWithFacts;
+
+private:
 
     int                                                         _worker_num;
 
