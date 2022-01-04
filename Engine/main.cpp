@@ -1,48 +1,131 @@
 #include <iostream>
 
 #include "engine.h"
-
+#include "executor.h"
+#include <chrono>
 
 int main() {
     std::cout << "Begin of Debug Program!" << std::endl;
 
     std::string file_name("../kb.json");
+
     Engine e(file_name);
+
     std::cout << "End of Debug Program!" << std::endl;
 
+    auto executor = Executor(e);
 
-    auto find_italy = e.find("Italy");
-    auto italy_relate = e.relateOp(find_italy, "film release region", "backward");
 
-    auto find_batman = e.find("Batman Begins");
+    json kopl;
+    std::ifstream kopl_file;
+    kopl_file.open("../kopl_sample.json", std::ios::in);
 
-    auto and_res = e.andOp(italy_relate, find_batman);
-    auto find_tootsie = e.find("Tootsie");
+    std::string kopl_str;
 
-    auto two_select = std::make_shared<std::vector<int>>();
-    two_select -> insert(two_select -> end(), find_tootsie -> begin(), find_tootsie -> end());
-    two_select -> insert(two_select -> end(), and_res -> begin(), and_res -> end());
+    kopl_file >> kopl;
 
-    std::cout << "-------\n";
-    for (auto x : *two_select) {
-        std::cout << "Entity: " << x << std::endl;
+
+
+
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+
+
+
+    const auto & program = kopl.at(0);
+    std::vector<Function> function;
+    for (const auto & funct : program.at("program")) {
+        const auto funct_name = funct.at("function").get<std::string>();
+
+        const auto funct_args = funct.at("inputs");
+
+        std::vector<std::string> args;
+        for (const auto & arg : funct_args) {
+            args.push_back(arg.get<std::string>());
+        }
+
+        const auto funct_deps = funct.at("dependencies");
+        int dep_a = -1, dep_b = -1;
+        if (funct_deps.size() > 0) {
+            dep_a = funct_deps.at(0).get<int>();
+        }
+        if (funct_deps.size() == 2) {
+            dep_b = funct_deps.at(1).get<int>();
+        }
+
+        function.emplace_back(funct_name, args, dep_a, dep_b);
     }
-    std::cout << "-------\n";
-
-    auto final_result = e.selectAmong(two_select, "cost", SelectOperator::smallest);
-
-    std::cout << (*and_res).size() << std::endl;
-    std::cout << (*find_tootsie).size() << std::endl;
-    std::cout << (*final_result).size() << std::endl;
-
-    auto ans = (*final_result)[0];
-
-    std::cout << (*ans) << std::endl;
 
 
-//    for (auto x : *e.find("LeBron James")) {
-//        std::cout << x << std::endl;
-//    }
+    std::vector<std::string> answers;
+
+    auto t1 = high_resolution_clock::now();
+    for (int i = 0; i < 5000; i++) {
+        auto ans = executor.execute_program(function);
+        answers.push_back(ans);
+    }
+    auto t2 = high_resolution_clock::now();
+    auto ms_int = duration_cast<milliseconds>(t2 - t1);
+    duration<double, std::milli> ms_double = t2 - t1;
+
+    std::cout << ms_int.count() << "ms\n";
+    std::cout << ms_double.count() << "ms\n";
+
+
+
+    exit(0);
+
+
+
+    for (const auto & program : kopl) {
+
+        std::vector<Function> function;
+
+
+
+        for (const auto & funct : program.at("program")) {
+            const auto funct_name = funct.at("function").get<std::string>();
+
+            const auto funct_args = funct.at("inputs");
+
+            std::vector<std::string> args;
+            for (const auto & arg : funct_args) {
+                args.push_back(arg.get<std::string>());
+            }
+
+            const auto funct_deps = funct.at("dependencies");
+            int dep_a = -1, dep_b = -1;
+            if (funct_deps.size() > 0) {
+                dep_a = funct_deps.at(0).get<int>();
+            }
+            if (funct_deps.size() == 2) {
+                dep_b = funct_deps.at(1).get<int>();
+            }
+
+            function.emplace_back(funct_name, args, dep_a, dep_b);
+        }
+
+        std::cout << "Gold Answer: " << program.at("answer").get<std::string>() << std::endl;
+        std::cout << "Number of Functions: " << function.size() << std::endl;
+        auto ans = executor.execute_program(function);
+        std::cout << ans << std::endl;
+
+        std::cout << std::endl;
+    }
+
+//    std::vector<Function> func;
+//
+//
+//    func.emplace_back("Find", "", "Georgia national football team", "");
+//    func.emplace_back("QueryAttrQualifier", "ranking", "78", "review score by", 0);
+//
+//    std::cout << "End of emplace back\n";
+//
+//    auto res = executor.execute_program(func);
+//    std::cout << res << std::endl;
 
     return 0;
 }

@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <nlohmann/json.hpp>
 #include <utility>
+#include <regex>
 
 using json = nlohmann::json;
 
@@ -46,7 +47,8 @@ public:
 
     static unsigned short convertJsonStringTypeToShort(const std::string &type_str, const json &val);
     static void parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & type_value_unit);
-    static BaseValue* convertStringToValue(const std::string & value_in_string, unsigned short value_type);
+//    static std::shared_ptr<BaseValue> convertStringToValue(const std::string & value_in_string);
+    static std::shared_ptr<BaseValue> convertStringToValue(const std::string & value_in_string, unsigned short type);
 
     template<typename SelfValueType, typename TargetValueType>
     static bool compareWithOperator(const BaseValue * self_value, const BaseValue * compare_value, const std::string & op);
@@ -103,14 +105,27 @@ public:
             }
         }
         auto quantity_value_string = val.substr(0, end_of_number);
-        value = atof(val.c_str());
-        unit = val.substr(end_of_number + 1, val.size() - end_of_number - 1);
+        value = std::stof(val);
+        if (end_of_number < val.size()) {
+            unit = val.substr(end_of_number + 1, val.size() - end_of_number - 1);
+        }
+        else {
+            unit = std::string("1");
+        }
+
     }
 
     bool operator == (const QuantityValue & compare_value) const;
     bool operator <  (const QuantityValue & compare_value) const;
     bool operator >  (const QuantityValue & compare_value) const;
     bool operator != (const QuantityValue & compare_value) const;
+
+//    bool operator == (const YearValue & compare_value) const;
+//    bool operator <  (const YearValue & compare_value) const;
+//    bool operator >  (const YearValue & compare_value) const;
+//    bool operator != (const YearValue & compare_value) const;
+
+
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
@@ -133,10 +148,12 @@ public:
             if (val[i] == '/' || i == val.size() - 1) {
                 short cur_val;
                 if (i != val.size() - 1) {
-                    cur_val = atoi(val.substr(begin, i - begin).c_str());
+//                    cur_val = atoi(val.substr(begin, i - begin).c_str());
+                    cur_val = (short)std::stoi(val.substr(begin, i - begin));
                 }
                 else {
-                    cur_val = atoi(val.substr(begin, val.size() - begin).c_str());
+//                    cur_val = atoi(val.substr(begin, val.size() - begin).c_str());
+                    cur_val = (short)std::stoi(val.substr(begin, val.size() - begin));
                 }
 
                 if (year == -1) {
@@ -177,7 +194,7 @@ public:
     explicit YearValue(short val, unsigned short type = year_type) : BaseValue(type), value(val) {
         assert (type == year_type);
     }
-    explicit YearValue(std::string val) : BaseValue(year_type), value(atoi(val.c_str())) {};
+    explicit YearValue(const std::string & val) : BaseValue(year_type), value((short)std::stoi(val)) {};
 
     bool operator == (const YearValue & compare_value) const;
     bool operator <  (const YearValue & compare_value) const;
@@ -189,23 +206,15 @@ public:
     bool operator >  (const DateValue & compare_value) const;
     bool operator != (const DateValue & compare_value) const;
 
+//    bool operator == (const QuantityValue & compare_value) const;
+//    bool operator <  (const QuantityValue & compare_value) const;
+//    bool operator >  (const QuantityValue & compare_value) const;
+//    bool operator != (const QuantityValue & compare_value) const;
+
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
     std::string toPrintStr() const override;
 //    std::string toStandardStr() const override;
-};
-
-
-class Fact {
-public:
-    std::string key;
-    BaseValue * value_ptr = nullptr;
-    unsigned short type = BaseValue::base_type;
-
-    explicit Fact(std::string & k, BaseValue * val_ptr, unsigned short t) : key(k), value_ptr(val_ptr), type(t) {};
-    ~Fact() {
-        delete value_ptr;
-    };
 };
 
 #endif //KOPL_VALUE_H

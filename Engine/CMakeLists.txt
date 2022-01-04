@@ -4,7 +4,7 @@ project(KoPL)
 set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
+#set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra")
 
 add_library(KoPL SHARED value.cpp value.h engine.cpp engine.h executor.cpp executor.h PyEngine.cpp executor.cpp executor.h)
 add_executable(main value.cpp value.h engine.cpp engine.h executor.cpp executor.h main.cpp)

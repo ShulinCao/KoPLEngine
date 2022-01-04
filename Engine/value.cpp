@@ -66,37 +66,39 @@ void BaseValue::parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & 
     }
 }
 
-BaseValue* BaseValue::convertStringToValue(const std::string & value_in_string, unsigned short value_type) {
-    BaseValue* value_ptr = nullptr;
-    if (value_type == string_type) {
-        value_ptr = new StringValue(value_in_string, value_type);
-    }
-    else if (value_type == int_type || value_type == float_type) {
-        auto end_of_number = value_in_string.size();
-        for (std::size_t i = 0; i < value_in_string.size(); i++) {
-            if (value_in_string[i] == ' ') {
-                end_of_number = i;
-                break;
-            }
-        }
-        auto quantity_value_string = value_in_string.substr(0, end_of_number);
-        auto quantity_unit_string = value_in_string.substr(end_of_number + 1, value_in_string.size() - end_of_number - 1);
+//std::shared_ptr<BaseValue> BaseValue::convertStringToValue(const std::string & value_in_string) {
+//    std::shared_ptr<BaseValue> construct_value_ptr;
+//    std::regex date_regex("[0-9]{3,4}-[0-9]{1,2}-[0-9]{1,2}");
+//    if (std::regex_match(value_in_string, date_regex)) {
+//        return std::make_shared<DateValue>(value_in_string, date_type);
+//    }
+//    else {
+//        std::regex year_regex("[0-9]{3,4}");
+//        if (std::regex_match(value_in_string, year_regex)) {
+//            return std::make_shared<YearValue>(value_in_string);
+//        }
+//        else {
+//            return std::make_shared<StringValue>(value_in_string);
+//        }
+//    }
+//}
 
-        auto quantity_value = atof(value_in_string.c_str());
-        value_ptr = new QuantityValue(quantity_value, quantity_unit_string, float_type);
+
+std::shared_ptr<BaseValue> BaseValue::convertStringToValue(const std::string & value_in_string, unsigned short type) {
+    if (type == string_type) {
+        return std::make_shared<StringValue>(value_in_string);
     }
-    else if (value_type == year_type) {
-        auto year_value = (short)atoi(value_in_string.c_str());
-        value_ptr = new YearValue(year_value, year_type);
+    else if (type == int_type || type == float_type) {
+        auto return_ptr = std::make_shared<QuantityValue>(value_in_string);
+        return_ptr -> type = type;
+        return return_ptr;
     }
-    else if (value_type == date_type) {
-        value_ptr = new DateValue(value_in_string, date_type);
+    else if (type == date_type) {
+        return std::make_shared<YearValue>(value_in_string);
     }
-    else {
-        std::cout << "Type Error!\n";
-        exit(125);
+    else if (type == year_type) {
+        return std::make_shared<StringValue>(value_in_string);
     }
-    return value_ptr;
 }
 
 template<typename SelfValueType, typename TargetValueType>
@@ -150,7 +152,7 @@ bool StringValue::valueCompare(const BaseValue * compare_value, const std::strin
 }
 
 bool QuantityValue::operator==(const QuantityValue & compare_value) const {
-    return this -> value == compare_value.value;
+    return abs(this -> value - compare_value.value) < 1e-8;
 }
 
 bool QuantityValue::operator< (const QuantityValue & compare_value) const {
@@ -164,6 +166,22 @@ bool QuantityValue::operator> (const QuantityValue & compare_value) const {
 bool QuantityValue::operator!=(const QuantityValue & compare_value) const {
     return this -> value != compare_value.value;
 }
+
+//bool QuantityValue::operator==(const YearValue & compare_value) const {
+//    return abs(this -> value - compare_value.value) < 1e-8;
+//}
+//
+//bool QuantityValue::operator< (const YearValue & compare_value) const {
+//    return this -> value <  compare_value.value;
+//}
+//
+//bool QuantityValue::operator> (const YearValue & compare_value) const {
+//    return this -> value >  compare_value.value;
+//}
+//
+//bool QuantityValue::operator!=(const YearValue & compare_value) const {
+//    return this -> value != compare_value.value;
+//}
 
 std::string QuantityValue::toPrintStr() const {
     char quant_str[200];
@@ -267,6 +285,22 @@ bool YearValue::operator> (const YearValue & compare_value) const {
 bool YearValue::operator!=(const YearValue & compare_value) const {
     return this -> value != compare_value.value;
 }
+
+//bool YearValue::operator==(const QuantityValue & compare_value) const {
+//    return abs(this -> value - compare_value.value) < 1e-8;
+//}
+//
+//bool YearValue::operator< (const QuantityValue & compare_value) const {
+//    return this -> value <  compare_value.value;
+//}
+//
+//bool YearValue::operator> (const QuantityValue & compare_value) const {
+//    return this -> value >  compare_value.value;
+//}
+//
+//bool YearValue::operator!=(const QuantityValue & compare_value) const {
+//    return this -> value != compare_value.value;
+//}
 
 std::string YearValue::toPrintStr() const {
     char year_str[10];
