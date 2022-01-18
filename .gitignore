@@ -57,6 +57,7 @@ Engine/cmake-build-laptopdebug
 Engine/cmake-build-saberrelease
 Engine/cmake-build-debug
 Engine/cmake-build-saber
+Engine/cmake-build-remote19
 *.DS_Store
 .idea
 
