@@ -8,8 +8,18 @@ void Engine::_parseQualifier(Qualifiers & qualifier_output, const json & qualifi
             std::shared_ptr<BaseValue> val_ptr;
             BaseValue::parseValue(val_ptr, single_qualifier);
             qualifier_output[qualifier_key_string].push_back(val_ptr);
-            _key_type[qualifier_key_string] = val_ptr -> type;
+//            _key_type[qualifier_key_string] = val_ptr -> type;
+            _addKeyType(qualifier_key_string, val_ptr -> type);
         }
+    }
+}
+
+void Engine::_addKeyType(const std::string &key, unsigned short type) {
+    if (type != BaseValue::year_type) {
+        _key_type[key] = type;
+    }
+    else {
+        _key_type[key] = BaseValue::date_type;
     }
 }
 
@@ -63,6 +73,21 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 
         _concept_name.push_back(concept_name);
         _concept_name_to_number[concept_name].push_back((int)_concept_name.size() - 1);
+
+        // Treat Concepts as Entities !!! Version 2.0 KG
+        _entity_id.push_back(concept_id);
+        _entity_id_to_number[concept_id] = (int)_entity_id.size() - 1;
+
+        _entity_name.push_back(concept_name);
+        if (_entity_name_to_number.find(concept_name) == _entity_name_to_number.end()) {
+            _entity_name_to_number[concept_name] = std::make_shared<Entities>();
+        }
+        _entity_name_to_number[concept_name] -> push_back((int)_entity_name.size() - 1);
+
+        // Reserve Space for _entity_attribute, _entity_relation, _entity_is_instance_of
+        _entity_attribute.emplace_back();
+        _entity_relation.emplace_back();
+        _entity_is_instance_of.emplace_back();
     }
 
     // Construct "_concept_sub_class_of"
@@ -84,11 +109,15 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     // Construct "_entity_attribute"
     for (const auto & entity : entity_json.items()) {
         std::string entity_id(entity.key());
+//        if (entity_id == "Q2283") {
+//            std::cout << "Here\n";
+//        }
         auto entity_name = entity.value().at("name").get<std::string>();
 
         // For "entity_id", "entity_id_to_number", "entity_name", "entity_name_to_number"
         _entity_id.push_back(entity_id);
         _entity_id_to_number[entity_id] = (int)_entity_id.size() - 1;
+
         _entity_name.push_back(entity_name);
         if (_entity_name_to_number.find(entity_name) == _entity_name_to_number.end()) {
             _entity_name_to_number[entity_name] = std::make_shared<Entities>();
@@ -98,24 +127,52 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         // For "_entity_is_instance_of"
         auto cur_entity_number = (int)_entity_name.size() - 1;
         _entity_is_instance_of.emplace_back();
-        for (const auto& concept_id : entity.value().at("instanceOf")) {
+        for (const auto & concept_id : entity.value().at("instanceOf")) {
             auto concept_id_in_string = concept_id.get<std::string>();
             int concept_number = _concept_id_to_number[concept_id_in_string];
             _entity_is_instance_of[cur_entity_number].insert(concept_number);
-            _concept_has_instance_entities[concept_number].insert(cur_entity_number);
+
+            // Fix - Add to super concepts
+            std::set<int> sup_concept_set = {concept_number};
+//            sup_concept_set.insert(concept_number);
+            bool find_sup = true;
+            while (find_sup) {
+                find_sup = false;
+                for (const auto & con : sup_concept_set) {
+                    for (const auto & sup_con : _concept_sub_class_of[con]) {
+                        if (sup_concept_set.find(sup_con) == sup_concept_set.end()) {
+                            find_sup = true;
+                            sup_concept_set.insert(sup_con);
+                        }
+                    }
+                }
+            }
+            for (const auto & con : sup_concept_set) {
+                _concept_has_instance_entities[con].insert(cur_entity_number);
+            }
         }
 
         // For "_entity_attribute"
+        if (entity_id == "Q259011") {
+            std::cout << "Here\n";
+        }
+
         std::map<std::string, std::vector<std::shared_ptr<Attribute>>> ent_attrs;
         for (const auto& attribute_json : entity.value().at("attributes")) {
             auto attribute = std::make_shared<Attribute>();
             // obtain key
             auto attribute_key = attribute_json.at("key").get<std::string>();
+
+//            if (entity_id == "Q2283" && attribute_key == "market capitalization") {
+//                std::cout << "Here2\n";
+//            }
             // construct inverted index for attribute keys
             _attribute_key_to_entities[attribute_key].insert(cur_entity_number);
             // obtain value
-            BaseValue::parseValue(attribute -> attribute_value, attribute_json.at("value"));
-            _key_type[attribute_key] = attribute -> attribute_value -> type;
+            auto & type_value_unit = attribute_json.at("value");
+            BaseValue::parseValue(attribute -> attribute_value, type_value_unit);
+//            _key_type[attribute_key] = attribute -> attribute_value -> type;
+            _addKeyType(attribute_key, attribute -> attribute_value -> type);
             // obtain qualifiers
             _parseQualifier(attribute -> fact_qualifiers, attribute_json.at("qualifiers"));
 
@@ -161,10 +218,73 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 
             auto rel_idx = (int)relation.size() - 1;
             _relation_in_entity_index[relation_index][entity_pair_index.head_entity].push_back(rel_idx);
-            _entity_forward_relation_index[entity_pair_index].push_back(rel_idx);
+            // Fix Logic bug: _entity_forward_relation stores **forward** relation only!!!
+            if (rel -> relation_direction == RelationDirection::forward) {
+                _entity_forward_relation_index[entity_pair_index].push_back(rel_idx);
+            }
         }
         _entity_relation.push_back(relation);
     }
+
+    std::cout << "Construct The Inverse Relation\n";
+    // Construct Inverse Relation TODO: Test
+    for (std::size_t head_entity = _concept_id.size(); head_entity < _entity_relation.size(); head_entity++) {  // 前半部分都是 concept
+        const auto & relations = _entity_relation[head_entity];
+
+        for (const auto & relation : relations) {
+            // Get Inverse Direction and Tail Entities
+            RelationDirection inv_direction;
+            if (relation -> relation_direction == RelationDirection::forward)   inv_direction = RelationDirection::backward;
+            else                                                                inv_direction = RelationDirection::forward;
+            const auto tail_entity = relation -> relation_tail_entity;
+
+            // Check Whether the inverse relation exists already
+            EntityPairIndex inv_entity_pair_index((int)tail_entity, (int)head_entity);
+            RelationIndex inv_relation_index(relation -> relation_name, inv_direction);
+
+            bool inv_exist = false;
+            if (_entity_pair_to_relation.find(inv_entity_pair_index) != _entity_pair_to_relation.end()) {
+                for (const auto relation_index : _entity_pair_to_relation.at(inv_entity_pair_index)) {
+                    if (relation_index.relation_name == inv_relation_index.relation_name && relation_index.relation_direction == inv_relation_index.relation_direction) {
+                        inv_exist = true;
+                        break;
+                    }
+                }
+            }
+
+            // Add the inverse relation if it does not exist
+            if (!inv_exist) {
+                auto inv_rel = std::make_shared<Relation>();
+                inv_rel -> relation_name = relation -> relation_name;
+                inv_rel -> relation_direction = inv_direction;
+                inv_rel -> relation_tail_entity = head_entity;
+
+                for (const auto & qualifiers : relation -> fact_qualifiers) {
+                    const auto & qualifier_key = qualifiers.first;
+                    for (const auto & qualifier_value : qualifiers.second) {
+                        (inv_rel -> fact_qualifiers)[qualifier_key].push_back(qualifier_value);
+                    }
+                }
+
+                _entity_relation[tail_entity].push_back(inv_rel);
+                auto inv_rel_idx = (int)_entity_relation[tail_entity].size() - 1;
+
+
+                // Add Index for the inverse relation as well
+                _relation_to_entity_pair[inv_relation_index].push_back(inv_entity_pair_index);
+                _entity_pair_to_relation[inv_entity_pair_index].push_back(inv_relation_index);
+
+
+                _relation_in_entity_index[inv_relation_index][inv_entity_pair_index.head_entity].push_back(inv_rel_idx);
+
+                // Fix Logic bug: _entity_forward_relation stores **forward** relation only!!!
+                if (inv_direction == RelationDirection::forward) {
+                    _entity_forward_relation_index[inv_entity_pair_index].push_back(inv_rel_idx);
+                }
+            }
+        }
+    }
+
 
     // construct all entities
     _all_entities = std::make_shared<EntitiesWithFacts>();
@@ -271,6 +391,8 @@ Engine::_filter_qualifier(const std::shared_ptr<EntitiesWithFacts> & entity_with
                     if (qualifier_value -> valueCompare(value_to_compare.get(), op)) {
                         satisfy_entity_with_fact_ptr -> first -> push_back(entity_id);
                         satisfy_entity_with_fact_ptr -> second -> push_back(attr);
+                        // Zijun: add break to Fix Bug, to avoid repeating the same attributes
+                        break;
                     }
                 }
             }
@@ -290,21 +412,36 @@ Engine::_filter_attribute(
     entity_with_fact_ptr -> first = std::make_shared<Entities>();
     entity_with_fact_ptr -> second = std::make_shared<Facts>();
 
+//    std::sort(entity_ids -> first -> begin(), entity_ids -> second -> end());
+
+    std::set<int> entity_ids_set;
+    for (const auto x : *(entity_ids -> first)) {
+        entity_ids_set.insert(x);
+    }
+
+    std::vector<int> valid_entity_ids;
+    std::set_intersection(entity_ids_set.begin(), entity_ids_set.end(), _attribute_key_to_entities.at(key).begin(), _attribute_key_to_entities.at(key).end(), std::back_inserter(valid_entity_ids));
+
     // enumerate over all entities
-    for (const auto & ent : *(entity_ids -> first)) {
-        const auto & entity_attributes = _entity_attribute[ent];
+//    for (const auto & ent : *(entity_ids -> first)) {
+    for (const auto & ent : valid_entity_ids) {
+//        if (_attribute_key_to_entities.at(key).find(ent) != _attribute_key_to_entities.at(key).end()) {
 
-        // enumerate over all attributes with satisfying key
-        if (entity_attributes.find(key) != entity_attributes.end()) {
-            for (const auto & entity_att : entity_attributes.at(key)) {
+            const auto & entity_attributes = _entity_attribute[ent];
 
-                // save the fact that satisfying the filtering condition
-                if (entity_att -> attribute_value -> valueCompare(value_to_compare.get(), op)) {
-                    entity_with_fact_ptr -> first -> push_back(ent);
-                    entity_with_fact_ptr -> second -> push_back(entity_att);
+            // enumerate over all attributes with satisfying key
+//            if (entity_attributes.find(key) != entity_attributes.end()) {
+                for (const auto & entity_att : entity_attributes.at(key)) {
+
+                    // save the fact that satisfying the filtering condition
+                    if (entity_att -> attribute_value -> valueCompare(value_to_compare.get(), op)) {
+                        entity_with_fact_ptr -> first -> push_back(ent);
+                        entity_with_fact_ptr -> second -> push_back(entity_att);
+                    }
                 }
-            }
-        }
+//            }
+
+//        }
     }
     return entity_with_fact_ptr;
 }
@@ -336,14 +473,14 @@ Engine::findAll() const {
 
 std::shared_ptr<Engine::EntitiesWithFacts>
 Engine::find(const std::string & find_entity_name) const {
+    auto res_ptr = std::make_shared<EntitiesWithFacts>();
     if (_entity_name_to_number.find(find_entity_name) != _entity_name_to_number.end()) {
-        auto res_ptr = std::make_shared<EntitiesWithFacts>();
         res_ptr -> first = _entity_name_to_number.at(find_entity_name);
-        return res_ptr;
     }
     else {
-        return std::make_shared<EntitiesWithFacts>();
+        res_ptr -> first = std::make_shared<Entities>();
     }
+    return res_ptr;
 }
 
 std::shared_ptr<Engine::EntitiesWithFacts>
@@ -365,11 +502,18 @@ Engine::filterConcept(
     auto output_entities = std::make_shared<EntitiesWithFacts>();
     output_entities -> first = std::make_shared<Entities>();
 
-    for (const auto & ent : *(entity_ids -> first)) {
-        if (entity_set.find(ent) != entity_set.end()) {
-            output_entities -> first -> push_back(ent);
-        }
-    }
+
+
+    std::set<int> entity_ids_set;
+    entity_ids_set.insert(entity_ids -> first -> begin(), entity_ids -> first -> end());
+
+    std::set_intersection(entity_ids_set.begin(), entity_ids_set.end(), entity_set.begin(), entity_set.end(), std::back_inserter(* output_entities -> first));
+
+//    for (const auto & ent : *(entity_ids -> first)) {
+//        if (entity_set.find(ent) != entity_set.end()) {
+//            output_entities -> first -> push_back(ent);
+//        }
+//    }
 
     return output_entities;
 }
@@ -515,16 +659,19 @@ Engine::queryRelation(const std::shared_ptr<EntitiesWithFacts> & entity_ids_a,
                       const std::shared_ptr<EntitiesWithFacts> & entity_ids_b) const {
     auto return_ptr = std::make_shared<std::vector<const std::string *>>();
     for (const auto & entity_a : *(entity_ids_a -> first)) {
-        for (const auto & entity_b : *(entity_ids_b -> first)) {
-            EntityPairIndex entity_pair(entity_a, entity_b);
-            if (_entity_pair_to_relation.find(entity_pair) != _entity_pair_to_relation.end()) {
-                const auto & relations = _entity_pair_to_relation.at(entity_pair);
-                for (const auto & relation : relations) {
+    for (const auto & entity_b : *(entity_ids_b -> first)) {
+        EntityPairIndex entity_pair(entity_a, entity_b);
+
+        if (_entity_pair_to_relation.find(entity_pair) != _entity_pair_to_relation.end()) {
+            const auto & relations = _entity_pair_to_relation.at(entity_pair);
+            for (const auto & relation : relations) {
+                // Fix Bug: Only Return Forward Relation!!!
+                if (relation.relation_direction == RelationDirection::forward) {
                     return_ptr -> push_back(&(relation.relation_name));
                 }
             }
         }
-    }
+    }}
     return return_ptr;
 }
 
@@ -560,8 +707,8 @@ std::shared_ptr<Engine::Values>
 Engine::queryRelationQualifier(
         const std::shared_ptr<EntitiesWithFacts> & entity_ids_a,
         const std::shared_ptr<EntitiesWithFacts> & entity_ids_b,
-        const std::string & qualifier_key,
-        const std::string & relation_name) const {
+        const std::string & relation_name,
+        const std::string & qualifier_key) const {
     auto value_of_satisfied_qualifiers_ptr = std::make_shared<Values>();
 
     // enumerate over entity_list_a x entity_list_b
@@ -599,14 +746,14 @@ Engine::selectAmong(
     auto return_ptr = std::make_shared<std::vector<const std::string *>>();
 
     SelectOperator select_operator;
-    if (select_op == "less") {
+    if (select_op == "less" || select_op == "smallest") {
         select_operator = SelectOperator::smallest;
     }
-    else if (select_op == "more") {
+    else if (select_op == "greater" || select_op == "largest") {
         select_operator = SelectOperator::largest;
     }
     else {
-        std::cout << "Unsupported Operator\n";
+        std::cout << "Unsupported Operator " << select_op << "\n";
         exit(234);
     }
 
@@ -640,7 +787,7 @@ Engine::selectAmong(
         }
     }
 
-    double max_value = std::numeric_limits<double>::min(), min_value = std::numeric_limits<double>::max();
+    double max_value = std::numeric_limits<double>::lowest(), min_value = std::numeric_limits<double>::max();
     for (const auto & candidate_pair : candidates) {
         auto & unit = ((QuantityValue*)(candidate_pair.second.get())) -> unit;
         if (unit != max_unit) continue;
@@ -744,19 +891,38 @@ std::shared_ptr<Engine::EntitiesWithFacts> Engine::relateOp(
         exit(125);
     }
 
+
     auto related_entities_ptr = std::make_shared<EntitiesWithFacts>();
     related_entities_ptr -> first  = std::make_shared<Entities>();
     related_entities_ptr -> second = std::make_shared<Facts>();
 
     RelationIndex rel_index(relation_name, rel_dir);
 
-    std::cout << "Here!\n";
+//    std::cout << "Here!\n";
 
     if (_relation_in_entity_index.find(rel_index) != _relation_in_entity_index.end()) {
         const auto & relation_index = _relation_in_entity_index.at(rel_index);
 
+//        for (const auto & x : relation_index) {
+//            std::cout << x.first << std::endl;
+//        }
+
+//        std::cout << "Position0\n";
+
         for (const auto & head_entity : *(entities -> first)) {
+
+//            std::cout << "Position1\n";
+//
+//            relation_index.end();
+//
+//            std::cout << "Position2\n";
+//
+//            relation_index.find(head_entity);
+//
+//            std::cout << "Position3\n";
+
             if (relation_index.find(head_entity) != relation_index.end()) {
+//                std::cout << "Position4\n";
                 const auto & rel_poses = relation_index.at(head_entity);
 
                 for (const auto & rel_pos : rel_poses) {
@@ -765,8 +931,11 @@ std::shared_ptr<Engine::EntitiesWithFacts> Engine::relateOp(
                     related_entities_ptr -> first -> push_back(tail_entity);
                     related_entities_ptr -> second -> push_back(relation_info);
                 }
+
+//                std::cout << "Position3\n";
             }
         }
+
     }
     return related_entities_ptr;
 }

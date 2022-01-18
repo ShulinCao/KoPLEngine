@@ -9,8 +9,8 @@ std::string Executor::execute_program(std::vector<Function> & program, bool trac
 
     std::string             answer;
 
-//    for (std::size_t i = 0; i < program.size(); i++) {
-    for (std::size_t i = 0; i < 2; i++) {
+    for (std::size_t i = 0; i < program.size(); i++) {
+//    for (std::size_t i = 0; i < 2; i++) {
         auto cur_function = program[i];
 
         if (trace) {

@@ -45,7 +45,7 @@ void BaseValue::parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & 
         value_ptr = std::make_shared<StringValue>(val, value_type);
     }
     else if (value_type == int_type) {
-        auto val = value_val.get<int>();
+        auto val = value_val.get<long long>();
         value_ptr = std::make_shared<QuantityValue>(val, unit, value_type);
     }
     else if (value_type == float_type) {
@@ -57,7 +57,7 @@ void BaseValue::parseValue(std::shared_ptr<BaseValue> & value_ptr, const json & 
         value_ptr = std::make_shared<DateValue>(val, value_type);
     }
     else if (value_type == year_type) {
-        auto val = value_val.get<short>();
+        auto val = value_val.get<long long>();
         value_ptr = std::make_shared<YearValue>(val, value_type);
     }
     else {
@@ -94,10 +94,22 @@ std::shared_ptr<BaseValue> BaseValue::convertStringToValue(const std::string & v
         return return_ptr;
     }
     else if (type == date_type) {
-        return std::make_shared<YearValue>(value_in_string);
+        bool find_split_token = false;
+        for (auto & c : value_in_string) {
+            if (c == '/' || c == '-') {
+                find_split_token = true;
+                break;
+            }
+        }
+        if (find_split_token && '-' != value_in_string[0]) {
+            return std::make_shared<DateValue>(value_in_string);
+        }
+        else {
+            return std::make_shared<YearValue>(value_in_string);
+        }
     }
     else if (type == year_type) {
-        return std::make_shared<StringValue>(value_in_string);
+        return std::make_shared<YearValue>(value_in_string);
     }
 }
 
@@ -152,7 +164,7 @@ bool StringValue::valueCompare(const BaseValue * compare_value, const std::strin
 }
 
 bool QuantityValue::operator==(const QuantityValue & compare_value) const {
-    return abs(this -> value - compare_value.value) < 1e-8;
+    return abs(this -> value - compare_value.value) < 1e-5;
 }
 
 bool QuantityValue::operator< (const QuantityValue & compare_value) const {
@@ -183,27 +195,80 @@ bool QuantityValue::operator!=(const QuantityValue & compare_value) const {
 //    return this -> value != compare_value.value;
 //}
 
+int QuantityValue::_floatPoint(double num) const {
+    num = num - (int)num;
+    for (int i = 0; i < 10; i++) {
+        num *= 10;
+        if (abs(num -  round(num)) < 1e-4) {
+            return i + 1;
+        }
+    }
+}
+
 std::string QuantityValue::toPrintStr() const {
     char quant_str[200];
     if (type == float_type) {
-        sprintf(quant_str, "%.3f %s", value, unit.c_str());
+        int float_point = _floatPoint(value);
+        if (float_point == 1) {
+            if (unit != "1")    sprintf(quant_str, "%.1lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.1lf", value);
+        }
+        else if (float_point == 2) {
+            if (unit != "1")    sprintf(quant_str, "%.2lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.2lf", value);
+        }
+        else if (float_point == 3) {
+            if (unit != "1")    sprintf(quant_str, "%.3lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.3lf", value);
+        }
+        else if (float_point == 4) {
+            if (unit != "1")    sprintf(quant_str, "%.4lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.4lf", value);
+        }
+        else if (float_point == 5) {
+            if (unit != "1")    sprintf(quant_str, "%.5lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.5lf", value);
+        }
+        else if (float_point == 6) {
+            if (unit != "1")    sprintf(quant_str, "%.6lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.6lf", value);
+        }
+        else if (float_point == 7) {
+            if (unit != "1")    sprintf(quant_str, "%.7lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.7lf", value);
+        }
+        else if (float_point == 8) {
+            if (unit != "1")    sprintf(quant_str, "%.8lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.8lf", value);
+        }
+        else if (float_point == 9) {
+            if (unit != "1")    sprintf(quant_str, "%.9lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.9lf", value);
+        }
+        else if (float_point == 10) {
+            if (unit != "1")    sprintf(quant_str, "%.10lf %s", value, unit.c_str());
+            else                sprintf(quant_str, "%.10lf", value);
+        }
     }
     else if (type == int_type) {
-        sprintf(quant_str, "%d %s", int(value), unit.c_str());
+        if (unit != "1")    sprintf(quant_str, "%lld %s", (long long)(value), unit.c_str());
+        else                sprintf(quant_str, "%lld", (long long)(value));
     }
 
     return std::string{quant_str};
 }
 
+// Fix Logic Bug: None comparable returns False！
 bool QuantityValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
     if ((compare_value -> type == int_type || compare_value -> type == float_type)
                                        && this -> unit == ((QuantityValue*)compare_value) -> unit) {
         return compareWithOperator<QuantityValue, QuantityValue>(this, compare_value, op);
     }
-    else if (op[0] == '!') {
-        return true;
-    }
     return false;
+//    else if (op[0] == '!') {
+//        return true;
+//    }
+//    return false;
 }
 
 
@@ -235,12 +300,13 @@ bool DateValue::operator!=(const DateValue & compare_value) const {
 
 std::string DateValue::toPrintStr() const {
     char date_str[200];
-    sprintf(date_str, "%d-%d-%d", year, month, day);
+    sprintf(date_str, "%04d-%02d-%02d", year, month, day);
     return std::string{date_str};
 }
 
 bool DateValue::operator==(const YearValue & compare_value) const {
-    return false;
+//    return false;
+    return year == compare_value.value;
 }
 
 bool DateValue::operator< (const YearValue & compare_value) const {
@@ -252,7 +318,8 @@ bool DateValue::operator> (const YearValue & compare_value) const {
 }
 
 bool DateValue::operator!=(const YearValue & compare_value) const {
-    return true;
+//    return true;
+    return year != compare_value.value;
 }
 
 bool DateValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {
@@ -309,7 +376,8 @@ std::string YearValue::toPrintStr() const {
 }
 
 bool YearValue::operator==(const DateValue & compare_value) const {
-    return value == compare_value.year;
+//    return value == compare_value.year;
+    return false;
 }
 
 bool YearValue::operator<(const DateValue & compare_value) const {
@@ -321,7 +389,8 @@ bool YearValue::operator>(const DateValue & compare_value) const {
 }
 
 bool YearValue::operator!=(const DateValue & compare_value) const {
-    return value != compare_value.year;
+//    return value != compare_value.year;
+    return true;
 }
 
 bool YearValue::valueCompare(const BaseValue * compare_value, const std::string & op) const {

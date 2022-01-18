@@ -93,7 +93,7 @@ public:
     explicit QuantityValue(double val, std::string u, unsigned short type) : BaseValue(type), value(val), unit(std::move(u)) {
         assert (type == float_type);
     }
-    explicit QuantityValue(int val, std::string u, unsigned short type) : BaseValue(type), value(val), unit(std::move(u)) {
+    explicit QuantityValue(long long val, std::string u, unsigned short type) : BaseValue(type), value(val), unit(std::move(u)) {
         assert (type == int_type);
     }
     explicit QuantityValue(std::string val) : BaseValue(float_type) {
@@ -105,7 +105,7 @@ public:
             }
         }
         auto quantity_value_string = val.substr(0, end_of_number);
-        value = std::stof(val);
+        value = std::stod(quantity_value_string);
         if (end_of_number < val.size()) {
             unit = val.substr(end_of_number + 1, val.size() - end_of_number - 1);
         }
@@ -128,6 +128,7 @@ public:
 
     bool valueCompare(const BaseValue * compare_value, const std::string & op) const override;
 
+    int _floatPoint(double num) const;
     std::string toPrintStr() const override;
 //    std::string toStandardStr() const override;
 
@@ -145,7 +146,7 @@ public:
 
         size_t begin = 0;
         for (size_t i = 0; i < val.size(); i++) {
-            if (val[i] == '/' || i == val.size() - 1) {
+            if (val[i] == '/' || val[i] == '-' || i == val.size() - 1) {
                 short cur_val;
                 if (i != val.size() - 1) {
 //                    cur_val = atoi(val.substr(begin, i - begin).c_str());
@@ -189,12 +190,12 @@ public:
 
 class YearValue: public BaseValue {
 public:
-    short value = -1;
+    long long value = -1;
 
-    explicit YearValue(short val, unsigned short type = year_type) : BaseValue(type), value(val) {
+    explicit YearValue(long long val, unsigned short type = year_type) : BaseValue(type), value(val) {
         assert (type == year_type);
     }
-    explicit YearValue(const std::string & val) : BaseValue(year_type), value((short)std::stoi(val)) {};
+    explicit YearValue(const std::string & val) : BaseValue(year_type), value((long long)std::stoll(val)) {};
 
     bool operator == (const YearValue & compare_value) const;
     bool operator <  (const YearValue & compare_value) const;

@@ -151,7 +151,7 @@ private:
 
 
     // Record entities that have some attribute (not the attribute value)
-    std::map<std::string, std::set<int>>                                        _attribute_key_to_entities;
+    std::map<std::string, std::set<int>>                              _attribute_key_to_entities;
 
     // Record entities that are pointed to by the relation
     std::map<RelationIndex, std::vector<EntityPairIndex>>                       _relation_to_entity_pair;
@@ -168,6 +168,7 @@ private:
 
     // Will modify key type
     void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
+    void _addKeyType(const std::string & key, unsigned short type);
 
     std::shared_ptr<EntitiesWithFacts>
     _filter_qualifier(
@@ -366,8 +367,8 @@ public:
             const std::shared_ptr<EntitiesWithFacts> & entity_ids_a,
             const std::shared_ptr<EntitiesWithFacts> & entity_ids_b,
 
-            const std::string & qualifier_key,                          // arg1
-            const std::string & relation_name                           // arg2
+            const std::string & relation_name,                          // arg1
+            const std::string & qualifier_key                           // arg2
     ) const;
 
 
