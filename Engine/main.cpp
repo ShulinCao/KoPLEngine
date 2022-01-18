@@ -18,7 +18,7 @@ int main() {
 
     json kopl;
     std::ifstream kopl_file;
-    kopl_file.open("../kopl.json", std::ios::in);
+    kopl_file.open("../kopl_sample.json", std::ios::in);
 
     std::string kopl_str;
 
@@ -81,19 +81,21 @@ int main() {
 
 //    for (const auto & program : kopl) {
 
-    std::set<int> train_problem_program{10663, 32750, 37732, 43382, 43965, 48275, 61297, 68401, 73447,
-                                        80537,  // Python Bug need to be fixed
-                                        86875
-    };
+//    std::set<int> train_problem_program{10663, 32750, 37732, 43382, 43965, 48275, 61297, 68401, 73447,
+//                                        80537,  // Python Bug need to be fixed
+//                                        86875
+//    };
+
+    std::set<int> train_problem_program{};
 
     std::ofstream debug_file("debug.txt", std::ios::out);
 
     for (int i = 0; i < kopl.size(); i++) {
         const auto & program = kopl.at(i);
 //        try {
-            if (program.at("answer").get<std::string>() != "no" &&
-                    train_problem_program.find(i) == train_problem_program.end()) {
-//            if (true) {
+//            if (program.at("answer").get<std::string>() != "no" &&
+//                    train_problem_program.find(i) == train_problem_program.end()) {
+            if (true) {
 
                 std::cout << "Program i = " << i << std::endl;
                 std::vector<Function> function;

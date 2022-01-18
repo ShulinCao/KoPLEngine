@@ -109,9 +109,6 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     // Construct "_entity_attribute"
     for (const auto & entity : entity_json.items()) {
         std::string entity_id(entity.key());
-//        if (entity_id == "Q2283") {
-//            std::cout << "Here\n";
-//        }
         auto entity_name = entity.value().at("name").get<std::string>();
 
         // For "entity_id", "entity_id_to_number", "entity_name", "entity_name_to_number"
@@ -153,10 +150,6 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         }
 
         // For "_entity_attribute"
-        if (entity_id == "Q259011") {
-            std::cout << "Here\n";
-        }
-
         std::map<std::string, std::vector<std::shared_ptr<Attribute>>> ent_attrs;
         for (const auto& attribute_json : entity.value().at("attributes")) {
             auto attribute = std::make_shared<Attribute>();
@@ -898,7 +891,6 @@ std::shared_ptr<Engine::EntitiesWithFacts> Engine::relateOp(
 
     RelationIndex rel_index(relation_name, rel_dir);
 
-//    std::cout << "Here!\n";
 
     if (_relation_in_entity_index.find(rel_index) != _relation_in_entity_index.end()) {
         const auto & relation_index = _relation_in_entity_index.at(rel_index);
