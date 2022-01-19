@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <utility>
 #include <regex>
+#include <cmath>
 
 using json = nlohmann::json;
 

@@ -164,7 +164,7 @@ bool StringValue::valueCompare(const BaseValue * compare_value, const std::strin
 }
 
 bool QuantityValue::operator==(const QuantityValue & compare_value) const {
-    return abs(this -> value - compare_value.value) < 1e-5;
+    return std::abs(this -> value - compare_value.value) < 1e-5;
 }
 
 bool QuantityValue::operator< (const QuantityValue & compare_value) const {
@@ -196,10 +196,11 @@ bool QuantityValue::operator!=(const QuantityValue & compare_value) const {
 //}
 
 int QuantityValue::_floatPoint(double num) const {
-    num = num - (int)num;
-    for (int i = 0; i < 10; i++) {
+    num = std::abs(num);
+    num = num - int(num);
+    for (int i = 0; i < 20; i++) {
         num *= 10;
-        if (abs(num -  round(num)) < 1e-4) {
+        if (std::abs(num -  round(num)) < 1e-4) {
             return i + 1;
         }
     }

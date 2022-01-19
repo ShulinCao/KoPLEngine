@@ -11,10 +11,10 @@ public:
     int                                                                     dependencies[2] = {-1, -1};
 
     Function(
-            std::string                 fun_name,
-            std::vector<std::string>    fun_args,
-            int                         dep_a = -1,
-            int                         dep_b = -2
+            const std::string &               fun_name,
+            const std::vector<std::string> &  fun_args,
+            int                               dep_a = -1,
+            int                               dep_b = -2
             ) : function_name(fun_name), function_args(fun_args) {
         dependencies[0] = dep_a;
         dependencies[1] = dep_b;
@@ -28,8 +28,11 @@ typedef  std::vector<std::shared_ptr<Engine::Values>>                       Valu
 
 class Executor {
 public:
-    Engine &                                                                executor_engine;
-    explicit Executor(Engine & engine) : executor_engine(engine) {};
+    std::shared_ptr<Engine>                                                 executor_engine;
+    explicit Executor(std::shared_ptr<Engine> engine) : executor_engine(engine) {};
+    explicit Executor(std::string kb_file_name, int worker_num) {
+        executor_engine = std::make_shared<Engine>(kb_file_name, worker_num);
+    }
 
 private:
     static std::string _obtain_result(int integer) {
@@ -56,7 +59,7 @@ private:
     }
 
 public:
-    std::string execute_program(std::vector<Function> & program, bool trace = false);
+    std::string execute_program(std::vector<Function> * program, bool trace = false);
 };
 
 

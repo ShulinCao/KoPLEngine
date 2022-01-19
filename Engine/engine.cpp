@@ -150,7 +150,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         }
 
         // For "_entity_attribute"
-        std::map<std::string, std::vector<std::shared_ptr<Attribute>>> ent_attrs;
+        std::unordered_map<std::string, std::vector<std::shared_ptr<Attribute>>> ent_attrs;
         for (const auto& attribute_json : entity.value().at("attributes")) {
             auto attribute = std::make_shared<Attribute>();
             // obtain key

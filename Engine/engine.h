@@ -15,7 +15,7 @@
 
 using json = nlohmann::json;
 
-typedef std::map<std::string, std::vector<std::shared_ptr<BaseValue>>> Qualifiers;
+typedef std::unordered_map<std::string, std::vector<std::shared_ptr<BaseValue>>> Qualifiers;
 
 enum RelationDirection{
     forward,
@@ -146,7 +146,7 @@ private:
     std::vector<std::set<int>>                                                  _entity_is_instance_of;
 
 
-    std::vector<std::map<std::string, std::vector<std::shared_ptr<Attribute>>>> _entity_attribute;
+    std::vector<std::unordered_map<std::string, std::vector<std::shared_ptr<Attribute>>>> _entity_attribute;
     std::vector<std::vector<std::shared_ptr<Relation>>>                         _entity_relation;
 
 
@@ -157,7 +157,7 @@ private:
     std::map<RelationIndex, std::vector<EntityPairIndex>>                       _relation_to_entity_pair;
     std::map<EntityPairIndex, std::vector<RelationIndex>>                       _entity_pair_to_relation;
 
-    std::map<RelationIndex, std::map<int, std::vector<int>>>                    _relation_in_entity_index;
+    std::map<RelationIndex, std::unordered_map<int, std::vector<int>>>                    _relation_in_entity_index;
     std::map<EntityPairIndex, std::vector<int>>                                 _entity_forward_relation_index;
 
     // Record all entities
