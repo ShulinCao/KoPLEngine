@@ -108,10 +108,64 @@ class Function(object):
     def __repr__(self):
         return str(self)
 
+
+class Program(object):
+    lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib')
+
+    lib.new_program.restype = c_void_p
+    lib.new_program.argtypes = []
+
+    lib.delete_program.restype = None
+    lib.delete_program.argtypes = [c_void_p]
+
+    lib.program_size.restype = c_int
+    lib.program_size.argtypes = [c_void_p]
+
+    lib.program_function_get.restype = c_void_p
+    lib.program_function_get.argtypes = [c_void_p, c_int]
+
+    lib.program_push_back.restype = None
+    lib.program_push_back.argtypes = [c_void_p, c_void_p]
+
+    def __init__(self):
+        self.program = Program.lib.new_program()
+
+    def __del__(self):
+        Program.lib.delete_program(self.program)
+
+    def __len__(self):
+        return Program.lib.program_size(self.program)
+
+    def push(self, x):
+        Program.lib.program_push_back(self.program, x)
+
+    def __getitem__(self, i):
+        if 0 <= i < len(self):
+            return Program.lib.program_function_get(self.program, i)
+        raise IndexError('Program index out of range')
+
+    def __repr__(self):
+        return '[\n{}\n]'.format(', '.join(Function.lib.print_function(self[i]).decode("utf-8") for i in range(len(self))))
+
+    def __str__(self):
+        return '[\n{}\n]'.format('\n, '.join(Function.lib.print_function(self[i]).decode("utf-8") for i in range(len(self))))
+
+
+
 if __name__ == "__main__":
     fun_args = StringVector()
     fun_args.push("height")
     fun_args.push("220 m")
-    function = Function("FilterNum", fun_args, 1, -2)
 
+    function = Function("FilterNum", fun_args, 1, -2)
     print(function)
+
+    program = Program()
+    print(program)
+    print(len(program))
+
+    program.push(function.function)
+    program.push(function.function)
+    program.push(function.function)
+
+    print(program)

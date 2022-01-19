@@ -93,11 +93,17 @@ extern "C" {
     vector<Function> * new_program() {
         return new vector<Function>;
     }
-    void program_push_back(vector<Function> * v, Function * x){
-        v -> emplace_back(x -> function_name, x -> function_args, x -> dependencies[0], x -> dependencies[1]);
-    }
     void delete_program(vector<Function> * p) {
         delete p;
+    }
+    int program_size(vector<Function> * v) {
+        return v -> size();
+    }
+    Function * program_function_get(vector<Function> * v, int i) {
+        return &(v -> at(i));
+    }
+    void program_push_back(vector<Function> * v, Function * x){
+        v -> emplace_back(x -> function_name, x -> function_args, x -> dependencies[0], x -> dependencies[1]);
     }
 }
 
