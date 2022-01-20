@@ -15,7 +15,6 @@ add_library(KoPL SHARED value.cpp value.h engine.cpp engine.h executor.cpp execu
 add_executable(main value.cpp value.h engine.cpp engine.h executor.cpp executor.h main.cpp)
 
 
-
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
