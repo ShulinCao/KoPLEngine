@@ -1,8 +1,18 @@
+import json
 from ctypes import *
+import time
+from tqdm import  tqdm
+
+lib = cdll.LoadLibrary('cmake-build-remote19/libKoPL.so')
+# lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib')
+
+lib.new_char_p.restype = c_char_p
+lib.new_char_p.argtypes = []
+
+lib.delete_char_p.restype = None
+lib.delete_char_p.argtypes = [c_char_p]
 
 class IntVector(object):
-    lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib') # class level loading lib
-
     lib.new_vector.restype = c_void_p
     lib.new_vector.argtypes = []
 
@@ -22,32 +32,31 @@ class IntVector(object):
     lib.foo.argtypes = [c_void_p]
 
     def __init__(self):
-        self.vector = IntVector.lib.new_vector()  # pointer to new vector
+        self.vector = lib.new_vector()  # pointer to new vector
 
     def __del__(self):  # when reference count hits 0 in Python,
-        IntVector.lib.delete_vector(self.vector)  # call C++ vector destructor
+        lib.delete_vector(self.vector)  # call C++ vector destructor
 
     def __len__(self):
-        return IntVector.lib.vector_size(self.vector)
+        return lib.vector_size(self.vector)
 
     def __getitem__(self, i):  # access elements in vector at index
         if 0 <= i < len(self):
-            return IntVector.lib.vector_get(self.vector, c_int(i))
+            return lib.vector_get(self.vector, c_int(i))
         raise IndexError('Vector index out of range')
 
     def __repr__(self):
         return '[{}]'.format(', '.join(str(self[i]) for i in range(len(self))))
 
     def push(self, i):  # push calls vector's push_back
-        IntVector.lib.vector_push_back(self.vector, c_int(i))
+        lib.vector_push_back(self.vector, c_int(i))
 
     def foo(self, filename):  # foo in Python calls foo in C++
-        IntVector.lib.foo(self.vector, c_char_p(filename))
+        lib.foo(self.vector, c_char_p(filename))
+
 
 
 class StringVector(object):
-    lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib')
-
     lib.new_string_vector.restype = c_void_p
     lib.new_string_vector.argtypes = []
 
@@ -64,17 +73,17 @@ class StringVector(object):
     lib.string_vector_push_back.argtypes = [c_void_p, c_char_p]
 
     def __init__(self):
-        self.string_vector = StringVector.lib.new_string_vector()
+        self.string_vector = lib.new_string_vector()
 
     def __del__(self):
-        StringVector.lib.delete_string_vector(self.string_vector)
+        lib.delete_string_vector(self.string_vector)
 
     def __len__(self):
-        return StringVector.lib.string_vector_size(self.string_vector)
+        return lib.string_vector_size(self.string_vector)
 
     def __getitem__(self, i):  # access elements in vector at index
         if 0 <= i < len(self):
-            return '"' + StringVector.lib.string_vector_get(self.string_vector, c_int(i)).decode("utf-8") + '"'
+            return '"' + lib.string_vector_get(self.string_vector, c_int(i)).decode("utf-8") + '"'
         raise IndexError('String Vector index out of range')
 
     def __repr__(self):
@@ -82,11 +91,11 @@ class StringVector(object):
 
     def push(self, x):  # push calls vector's push_back
         x = x.encode("utf-8")
-        StringVector.lib.string_vector_push_back(self.string_vector, c_char_p(x))
+        lib.string_vector_push_back(self.string_vector, c_char_p(x))
+
+
 
 class Function(object):
-    lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib')
-
     lib.new_function.restype = c_void_p
     lib.new_function.argtypes = [c_char_p, c_void_p, c_int, c_int]
 
@@ -94,23 +103,26 @@ class Function(object):
     lib.delete_function.argtypes = [c_void_p]
 
     lib.print_function.restype = c_char_p
-    lib.print_function.argtypes = [c_void_p]
+    lib.print_function.argtypes = [c_void_p, c_char_p]
 
     def __init__(self, fun_name, fun_args, dep_a, dep_b):
-        self.function = Function.lib.new_function(fun_name.encode("utf-8"), fun_args.string_vector, dep_a, dep_b)
+        self.function = lib.new_function(fun_name.encode("utf-8"), fun_args.string_vector, dep_a, dep_b)
 
     def __del__(self):
-        Function.lib.delete_function(self.function)
+        lib.delete_function(self.function)
 
     def __str__(self):
-        return Function.lib.print_function(self.function).decode("utf-8")
+        buffer = lib.new_char_p()
+        ret_str = lib.print_function(self.function, buffer).decode("utf-8")
+        # lib.delete_char_p(buffer)
+        return ret_str
 
     def __repr__(self):
         return str(self)
 
 
+
 class Program(object):
-    lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib')
 
     lib.new_program.restype = c_void_p
     lib.new_program.argtypes = []
@@ -128,44 +140,102 @@ class Program(object):
     lib.program_push_back.argtypes = [c_void_p, c_void_p]
 
     def __init__(self):
-        self.program = Program.lib.new_program()
+        self.program = lib.new_program()
 
     def __del__(self):
-        Program.lib.delete_program(self.program)
+        lib.delete_program(self.program)
 
     def __len__(self):
-        return Program.lib.program_size(self.program)
+        return lib.program_size(self.program)
 
     def push(self, x):
-        Program.lib.program_push_back(self.program, x)
+        lib.program_push_back(self.program, x.function)
 
     def __getitem__(self, i):
         if 0 <= i < len(self):
-            return Program.lib.program_function_get(self.program, i)
+            return lib.program_function_get(self.program, i)
         raise IndexError('Program index out of range')
 
     def __repr__(self):
-        return '[\n{}\n]'.format(', '.join(Function.lib.print_function(self[i]).decode("utf-8") for i in range(len(self))))
+        return '[\n{}\n]'.format(', '.join(lib.print_function(self[i]).decode("utf-8") for i in range(len(self))))
 
     def __str__(self):
-        return '[\n{}\n]'.format('\n, '.join(Function.lib.print_function(self[i]).decode("utf-8") for i in range(len(self))))
+        return '[\n{}\n]'.format('\n, '.join(lib.print_function(self[i]).decode("utf-8") for i in range(len(self))))
 
+lib.init.restype = c_void_p
+lib.init.argtypes = [c_char_p, c_int]
+def init(kb_file_name, worker_num = 4):
+    return lib.init(kb_file_name.encode("utf-8"), worker_num)
+
+lib.execute.restype = c_char_p
+lib.execute.argtypes = [c_void_p, c_void_p, c_bool]
+def forward(executor, program, trace):
+    ans = lib.execute(executor, program.program, trace)
+    print(ans)
+    # try:
+    #     return ans.decode("utf-8")
+    # except:
+    #     print(ans)
+    #     exit()
 
 
 if __name__ == "__main__":
-    fun_args = StringVector()
-    fun_args.push("height")
-    fun_args.push("220 m")
+    # fun_args = StringVector()
+    # fun_args.push("height")
+    # fun_args.push("220 m")
+    #
+    # function = Function("FilterNum", fun_args, 1, -2)
+    # print(function)
+    #
+    # program = Program()
+    # print(program)
+    # print(len(program))
+    #
+    # program.push(function)
+    # program.push(function)
+    # program.push(function)
+    #
+    # print(program)
+    #
 
-    function = Function("FilterNum", fun_args, 1, -2)
-    print(function)
 
-    program = Program()
-    print(program)
-    print(len(program))
 
-    program.push(function.function)
-    program.push(function.function)
-    program.push(function.function)
 
-    print(program)
+
+    # executor = init("kb.json")
+
+    programs = json.load(open("kopl.json"))
+
+    s = time.time()
+    # for i in tqdm(range(len(programs))):
+    for i in range(len(programs)):
+        program = Program()
+
+        prog = programs[i]["program"]
+        ansr = programs[i]["answer"]
+        for j, func in enumerate(prog):
+            func_name = func["function"]
+            func_deps = func["dependencies"]
+            func_inpt = func["inputs"]
+
+            dep_a = -1
+            dep_b = -2
+            if len(func_deps) > 0:
+                dep_a = func_deps[0]
+            if len(func_deps) > 1:
+                dep_b = func_deps[1]
+
+            function_arguments = StringVector()
+            for x in func_inpt:
+                function_arguments.push(x)
+
+            function = Function(func_name, function_arguments, dep_a, dep_b)
+
+            print(function)
+            program.push(function)
+
+        # print(program)
+        # pred = forward(executor, program, False)
+        # print(ansr, pred)
+    e = time.time()
+    print(e - s)

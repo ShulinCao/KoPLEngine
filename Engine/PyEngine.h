@@ -10,6 +10,18 @@
 
 using namespace std;
 
+
+extern "C" {
+    char * new_char_p() {
+        return new char[500];
+    }
+    void delete_char_p(char * p) {
+        delete[] p;
+        std::cout << "Here\n";
+    }
+}
+
+
 extern "C" {
     void foo(vector<int>* v, const char* FILE_NAME){
         string line;
@@ -57,13 +69,15 @@ extern "C" {
 
 extern "C" {
     Function * new_function(const char * fun_name, vector<string> * fun_args, int dep_a, int dep_b) {
+        std::cout << std::string(fun_name) << std::endl;
         return new Function(std::string(fun_name), *fun_args, dep_a, dep_b);
     }
     void delete_function(Function * f) {
         delete f;
     }
-    const char * print_function(Function * f) {
-        char print_fun[500];
+    const char * print_function(Function * f, char * print_fun) {
+//        char print_fun[500];
+//        char * print_fun = new char[500];
         sprintf(print_fun, "Function: %s\n", f -> function_name.c_str());
 
         char print_args[500];
@@ -84,6 +98,7 @@ extern "C" {
                 strcat(print_fun, print_args);
             }
         }
+        std::cout << print_fun << endl;
         return print_fun;
     }
 }
@@ -110,7 +125,7 @@ extern "C" {
 
 extern "C" {
     Executor * init(const char * kb_file_name, int worker_num);
-    void execute(Executor * e, vector<Function> * program, char * result, bool trace = false);
+    const char * execute(Executor * e, vector<Function> * program, bool trace = false);
 }
 
 
