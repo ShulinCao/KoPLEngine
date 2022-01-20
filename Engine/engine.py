@@ -191,6 +191,8 @@ class Program(object):
 
 
 
+
+
 lib.init.restype = c_void_p
 lib.init.argtypes = [c_char_p, c_int]
 def init(kb_file_name, worker_num = 4):
@@ -207,6 +209,7 @@ def forward(executor, program, trace):
 
 
 def parse_program(prog : dict):
+    program = Program()
     for j, func in enumerate(prog):
         func_name = func["function"]
         func_deps = func["dependencies"]
@@ -239,7 +242,6 @@ if __name__ == "__main__":
     s = time.time()
     for i in tqdm(range(len(programs))):
     # for i in range(len(programs)):
-        program = Program()
 
         ansr = programs[i]["answer"]
         prog = parse_program(programs[i]["program"])
