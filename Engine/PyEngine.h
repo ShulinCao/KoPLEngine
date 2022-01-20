@@ -17,7 +17,6 @@ extern "C" {
     }
     void delete_char_p(char * p) {
         delete[] p;
-        std::cout << "Here\n";
     }
 }
 
@@ -69,7 +68,7 @@ extern "C" {
 
 extern "C" {
     Function * new_function(const char * fun_name, vector<string> * fun_args, int dep_a, int dep_b) {
-        std::cout << std::string(fun_name) << std::endl;
+//        std::cout << std::string(fun_name) << std::endl;
         return new Function(std::string(fun_name), *fun_args, dep_a, dep_b);
     }
     void delete_function(Function * f) {
@@ -98,7 +97,7 @@ extern "C" {
                 strcat(print_fun, print_args);
             }
         }
-        std::cout << print_fun << endl;
+//        std::cout << print_fun << endl;
         return print_fun;
     }
 }
@@ -125,7 +124,7 @@ extern "C" {
 
 extern "C" {
     Executor * init(const char * kb_file_name, int worker_num);
-    const char * execute(Executor * e, vector<Function> * program, bool trace = false);
+    const char * execute(Executor * e, vector<Function> * program, char * print_buffer, bool trace = false);
 }
 
 

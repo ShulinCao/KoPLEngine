@@ -1,16 +1,19 @@
 import json
 from ctypes import *
 import time
+import faulthandler
+faulthandler.enable()
 from tqdm import  tqdm
 
 lib = cdll.LoadLibrary('cmake-build-remote19/libKoPL.so')
 # lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib')
 
-lib.new_char_p.restype = c_char_p
+lib.new_char_p.restype = c_void_p
 lib.new_char_p.argtypes = []
 
 lib.delete_char_p.restype = None
-lib.delete_char_p.argtypes = [c_char_p]
+lib.delete_char_p.argtypes = [c_void_p]
+
 
 class IntVector(object):
     lib.new_vector.restype = c_void_p
@@ -103,7 +106,7 @@ class Function(object):
     lib.delete_function.argtypes = [c_void_p]
 
     lib.print_function.restype = c_char_p
-    lib.print_function.argtypes = [c_void_p, c_char_p]
+    lib.print_function.argtypes = [c_void_p, c_void_p]
 
     def __init__(self, fun_name, fun_args, dep_a, dep_b):
         self.function = lib.new_function(fun_name.encode("utf-8"), fun_args.string_vector, dep_a, dep_b)
@@ -113,12 +116,17 @@ class Function(object):
 
     def __str__(self):
         buffer = lib.new_char_p()
-        ret_str = lib.print_function(self.function, buffer).decode("utf-8")
-        # lib.delete_char_p(buffer)
+        ret_ptr = lib.print_function(self.function, buffer)
+        ret_str = cast(ret_ptr, c_char_p).value.decode("utf-8")
+        lib.delete_char_p(buffer)
         return ret_str
 
     def __repr__(self):
-        return str(self)
+        buffer = lib.new_char_p()
+        ret_ptr = lib.print_function(self.function, buffer)
+        ret_str = cast(ret_ptr, c_char_p).value.decode("utf-8")
+        lib.delete_char_p(buffer)
+        return ret_str
 
 
 
@@ -157,10 +165,31 @@ class Program(object):
         raise IndexError('Program index out of range')
 
     def __repr__(self):
-        return '[\n{}\n]'.format(', '.join(lib.print_function(self[i]).decode("utf-8") for i in range(len(self))))
+        ret_str = "[\n"
+
+        buffer = lib.new_char_p()
+        for i in range(len(self)):
+            ret_ptr = lib.print_function(self[i], buffer)
+            ret_str += cast(ret_ptr, c_char_p).value.decode("utf-8")
+        lib.delete_char_p(buffer)
+
+        ret_str += "]"
+        return ret_str
 
     def __str__(self):
-        return '[\n{}\n]'.format('\n, '.join(lib.print_function(self[i]).decode("utf-8") for i in range(len(self))))
+        ret_str = "[\n"
+
+        buffer = lib.new_char_p()
+        for i in range(len(self)):
+            ret_ptr = lib.print_function(self[i], buffer)
+            ret_str += cast(ret_ptr, c_char_p).value.decode("utf-8")
+            ret_str += "\n++++++++++++++++++++\n"
+        lib.delete_char_p(buffer)
+
+        ret_str += "]"
+        return ret_str
+
+
 
 lib.init.restype = c_void_p
 lib.init.argtypes = [c_char_p, c_int]
@@ -168,74 +197,56 @@ def init(kb_file_name, worker_num = 4):
     return lib.init(kb_file_name.encode("utf-8"), worker_num)
 
 lib.execute.restype = c_char_p
-lib.execute.argtypes = [c_void_p, c_void_p, c_bool]
+lib.execute.argtypes = [c_void_p, c_void_p, c_void_p, c_bool]
 def forward(executor, program, trace):
-    ans = lib.execute(executor, program.program, trace)
-    print(ans)
-    # try:
-    #     return ans.decode("utf-8")
-    # except:
-    #     print(ans)
-    #     exit()
+    buffer = lib.new_char_p()
+    ret_ptr = lib.execute(executor, program.program, buffer, trace)
+    ret_str = cast(ret_ptr, c_char_p).value.decode("utf-8")
+    lib.delete_char_p(buffer)
+    return ret_str
+
+
+def parse_program(prog : dict):
+    for j, func in enumerate(prog):
+        func_name = func["function"]
+        func_deps = func["dependencies"]
+        func_inpt = func["inputs"]
+
+        dep_a = -1
+        dep_b = -2
+        if len(func_deps) > 0:
+            dep_a = func_deps[0]
+        if len(func_deps) > 1:
+            dep_b = func_deps[1]
+
+        function_arguments = StringVector()
+        for x in func_inpt:
+            function_arguments.push(x)
+
+        function = Function(func_name, function_arguments, dep_a, dep_b)
+        functions.append(function)
+
+        program.push(function)
+    return program
 
 
 if __name__ == "__main__":
-    # fun_args = StringVector()
-    # fun_args.push("height")
-    # fun_args.push("220 m")
-    #
-    # function = Function("FilterNum", fun_args, 1, -2)
-    # print(function)
-    #
-    # program = Program()
-    # print(program)
-    # print(len(program))
-    #
-    # program.push(function)
-    # program.push(function)
-    # program.push(function)
-    #
-    # print(program)
-    #
-
-
-
-
-
-    # executor = init("kb.json")
-
+    executor = init("kb.json")
     programs = json.load(open("kopl.json"))
 
+    functions = []
+
     s = time.time()
-    # for i in tqdm(range(len(programs))):
-    for i in range(len(programs)):
+    for i in tqdm(range(len(programs))):
+    # for i in range(len(programs)):
         program = Program()
 
-        prog = programs[i]["program"]
         ansr = programs[i]["answer"]
-        for j, func in enumerate(prog):
-            func_name = func["function"]
-            func_deps = func["dependencies"]
-            func_inpt = func["inputs"]
+        prog = parse_program(programs[i]["program"])
 
-            dep_a = -1
-            dep_b = -2
-            if len(func_deps) > 0:
-                dep_a = func_deps[0]
-            if len(func_deps) > 1:
-                dep_b = func_deps[1]
+        pred = forward(executor, prog, False)
+        if (ansr != pred):
+            print(i, ansr, pred)
 
-            function_arguments = StringVector()
-            for x in func_inpt:
-                function_arguments.push(x)
-
-            function = Function(func_name, function_arguments, dep_a, dep_b)
-
-            print(function)
-            program.push(function)
-
-        # print(program)
-        # pred = forward(executor, program, False)
-        # print(ansr, pred)
     e = time.time()
     print(e - s)
