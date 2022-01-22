@@ -23,6 +23,35 @@ void Engine::_addKeyType(const std::string &key, unsigned short type) {
     }
 }
 
+void Engine::_addFindAllFilterIndex(
+        const std::string & attribute_key,
+        const std::shared_ptr<Attribute> & attribute,
+        int cur_entity_number) {
+    if (attribute -> attribute_value -> type == BaseValue::string_type) {
+        std::string index_key{attribute_key};
+        index_key += "__$$__";
+        index_key += (attribute -> attribute_value -> toPrintStr());
+
+        if (_find_all_filter_str_index.find(index_key) == _find_all_filter_str_index.end()) {
+            _find_all_filter_str_index[index_key] = std::make_shared<EntitiesWithFacts>();
+            _find_all_filter_str_index[index_key] -> first = std::make_shared<Entities>();
+            _find_all_filter_str_index[index_key] -> second = std::make_shared<Facts>();
+        }
+
+        _find_all_filter_str_index[index_key] -> first -> push_back(cur_entity_number);
+        _find_all_filter_str_index[index_key] -> second -> push_back(attribute);
+    }
+    else if (attribute -> attribute_value -> type == BaseValue::int_type || attribute -> attribute_value -> type == BaseValue::float_type) {
+
+    }
+    else if (attribute -> attribute_value -> type == BaseValue::year_type) {
+
+    }
+    else if (attribute -> attribute_value -> type == BaseValue::date_type) {
+
+    }
+}
+
 Engine::Engine(std::string & kb_file_name, int worker_num) {
     _worker_num = worker_num;
 
@@ -51,13 +80,13 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     std::cout << "number of entities " << total_entity_num << std::endl;
 
     // Reserve Space for vectors
-    _concept_name.reserve(total_concept_num);
-    _concept_sub_class_of.reserve(total_concept_num);
+    _concept_name           .reserve(total_concept_num);
+    _concept_sub_class_of   .reserve(total_concept_num);
 
-    _entity_name.reserve(total_entity_num);
-    _entity_is_instance_of.reserve(total_entity_num);
-    _entity_attribute.reserve(total_entity_num);
-    _entity_relation.reserve(total_entity_num);
+    _entity_name            .reserve(total_entity_num + total_concept_num);
+    _entity_is_instance_of  .reserve(total_entity_num + total_concept_num);
+    _entity_attribute       .reserve(total_entity_num + total_concept_num);
+    _entity_relation        .reserve(total_entity_num + total_concept_num);
 
     // Reserve for Index
     _concept_has_instance_entities.resize(total_concept_num);
@@ -156,16 +185,13 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             // obtain key
             auto attribute_key = attribute_json.at("key").get<std::string>();
 
-//            if (entity_id == "Q2283" && attribute_key == "market capitalization") {
-//                std::cout << "Here2\n";
-//            }
             // construct inverted index for attribute keys
             _attribute_key_to_entities[attribute_key].insert(cur_entity_number);
             // obtain value
             auto & type_value_unit = attribute_json.at("value");
             BaseValue::parseValue(attribute -> attribute_value, type_value_unit);
-//            _key_type[attribute_key] = attribute -> attribute_value -> type;
             _addKeyType(attribute_key, attribute -> attribute_value -> type);
+            _addFindAllFilterIndex(attribute_key, attribute, cur_entity_number);
             // obtain qualifiers
             _parseQualifier(attribute -> fact_qualifiers, attribute_json.at("qualifiers"));
 
@@ -206,7 +232,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             RelationIndex relation_index(relation_name_string, relation_direction);
             EntityPairIndex entity_pair_index((int)_entity_relation.size(), tail_entity_number);
 
-            _relation_to_entity_pair[relation_index].push_back(entity_pair_index);
+//            _relation_to_entity_pair[relation_index].push_back(entity_pair_index);
             _entity_pair_to_relation[entity_pair_index].push_back(relation_index);
 
             auto rel_idx = (int)relation.size() - 1;
@@ -238,7 +264,8 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             bool inv_exist = false;
             if (_entity_pair_to_relation.find(inv_entity_pair_index) != _entity_pair_to_relation.end()) {
                 for (const auto relation_index : _entity_pair_to_relation.at(inv_entity_pair_index)) {
-                    if (relation_index.relation_name == inv_relation_index.relation_name && relation_index.relation_direction == inv_relation_index.relation_direction) {
+                    if (relation_index.relation_name == inv_relation_index.relation_name &&
+                        relation_index.relation_direction == inv_relation_index.relation_direction) {
                         inv_exist = true;
                         break;
                     }
@@ -264,7 +291,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 
 
                 // Add Index for the inverse relation as well
-                _relation_to_entity_pair[inv_relation_index].push_back(inv_entity_pair_index);
+//                _relation_to_entity_pair[inv_relation_index].push_back(inv_entity_pair_index);
                 _entity_pair_to_relation[inv_entity_pair_index].push_back(inv_relation_index);
 
 
@@ -275,6 +302,20 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
                     _entity_forward_relation_index[inv_entity_pair_index].push_back(inv_rel_idx);
                 }
             }
+        }
+    }
+
+
+    // Sort Entities of the same name by their frequencies
+    std::cout << "Sort Entities\n";
+    for (auto & entity_name_num : _entity_name_to_number) {
+        auto & entity_nums = entity_name_num.second;
+        if (entity_nums -> size() > 1) {
+            std::sort(entity_nums -> begin(), entity_nums -> end(),
+                      [this](int const & a, int const & b) {
+                          return _entity_relation[a].size() > _entity_relation[b].size();
+                      });
+            entity_nums -> erase(entity_nums -> begin() + 1, entity_nums -> end());
         }
     }
 
@@ -495,18 +536,10 @@ Engine::filterConcept(
     auto output_entities = std::make_shared<EntitiesWithFacts>();
     output_entities -> first = std::make_shared<Entities>();
 
-
-
     std::set<int> entity_ids_set;
     entity_ids_set.insert(entity_ids -> first -> begin(), entity_ids -> first -> end());
 
     std::set_intersection(entity_ids_set.begin(), entity_ids_set.end(), entity_set.begin(), entity_set.end(), std::back_inserter(* output_entities -> first));
-
-//    for (const auto & ent : *(entity_ids -> first)) {
-//        if (entity_set.find(ent) != entity_set.end()) {
-//            output_entities -> first -> push_back(ent);
-//        }
-//    }
 
     return output_entities;
 }
@@ -519,6 +552,28 @@ Engine::filterStr(
     auto value_to_compare = std::make_shared<StringValue>(string_value);
     auto return_pairs = _filter_attribute(entity_ids, string_key, value_to_compare, "=");
     return return_pairs;
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::findAllFilterStr(
+        const std::string & string_key,
+        const std::string & string_value) const {
+    std::shared_ptr<EntitiesWithFacts> entity_with_fact_ptr;
+
+    std::string index_key{string_key};
+    index_key += "__$$__";
+    index_key += string_value;
+
+    if (_find_all_filter_str_index.find(index_key) != _find_all_filter_str_index.end()) {
+        return _find_all_filter_str_index.at(index_key);
+    }
+    else {
+        entity_with_fact_ptr = std::make_shared<EntitiesWithFacts>();
+        entity_with_fact_ptr -> first = std::make_shared<Entities>();
+        entity_with_fact_ptr -> second = std::make_shared<Facts>();
+    }
+
+    return entity_with_fact_ptr;
 }
 
 std::shared_ptr<Engine::EntitiesWithFacts>
@@ -655,15 +710,11 @@ Engine::queryRelation(const std::shared_ptr<EntitiesWithFacts> & entity_ids_a,
     for (const auto & entity_b : *(entity_ids_b -> first)) {
         EntityPairIndex entity_pair(entity_a, entity_b);
 
-        if (_entity_pair_to_relation.find(entity_pair) != _entity_pair_to_relation.end()) {
-            const auto & relations = _entity_pair_to_relation.at(entity_pair);
-            for (const auto & relation : relations) {
-                // Fix Bug: Only Return Forward Relation!!!
-                if (relation.relation_direction == RelationDirection::forward) {
-                    return_ptr -> push_back(&(relation.relation_name));
-                }
-            }
-        }
+        if (_entity_forward_relation_index.find(entity_pair) != _entity_forward_relation_index.end()) {
+        for (const auto & forward_relation_index: _entity_forward_relation_index.at(entity_pair)) {
+                const auto & relation = _entity_relation[entity_a][forward_relation_index];
+                return_ptr ->push_back(&relation->relation_name);
+        }}
     }}
     return return_ptr;
 }
@@ -895,26 +946,9 @@ std::shared_ptr<Engine::EntitiesWithFacts> Engine::relateOp(
     if (_relation_in_entity_index.find(rel_index) != _relation_in_entity_index.end()) {
         const auto & relation_index = _relation_in_entity_index.at(rel_index);
 
-//        for (const auto & x : relation_index) {
-//            std::cout << x.first << std::endl;
-//        }
-
-//        std::cout << "Position0\n";
-
         for (const auto & head_entity : *(entities -> first)) {
 
-//            std::cout << "Position1\n";
-//
-//            relation_index.end();
-//
-//            std::cout << "Position2\n";
-//
-//            relation_index.find(head_entity);
-//
-//            std::cout << "Position3\n";
-
             if (relation_index.find(head_entity) != relation_index.end()) {
-//                std::cout << "Position4\n";
                 const auto & rel_poses = relation_index.at(head_entity);
 
                 for (const auto & rel_pos : rel_poses) {
@@ -924,7 +958,6 @@ std::shared_ptr<Engine::EntitiesWithFacts> Engine::relateOp(
                     related_entities_ptr -> second -> push_back(relation_info);
                 }
 
-//                std::cout << "Position3\n";
             }
         }
 

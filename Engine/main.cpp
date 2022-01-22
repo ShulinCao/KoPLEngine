@@ -7,8 +7,8 @@
 int main() {
     std::cout << "Begin of Debug Program!" << std::endl;
 
-//    std::string file_name("../kb.json");
-    std::string file_name("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json");
+    std::string file_name("../kb.json");
+//    std::string file_name("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json");
 //    std::string file_name("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final.json");
 
     auto executor = Executor(file_name, 4);
@@ -21,65 +21,16 @@ int main() {
 
     json kopl;
     std::ifstream kopl_file;
-    kopl_file.open("../kopl.json", std::ios::in);
+    kopl_file.open("../problem.json", std::ios::in);
 
     std::string kopl_str;
 
     kopl_file >> kopl;
 
-
-
-
-    // Test Speed-------------------------------
-
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::duration;
     using std::chrono::milliseconds;
-//
-//
-//    const auto & program = kopl.at(0);
-//    std::vector<Function> function;
-//    for (const auto & funct : program.at("program")) {
-//        const auto funct_name = funct.at("function").get<std::string>();
-//
-//        const auto funct_args = funct.at("inputs");
-//
-//        std::vector<std::string> args;
-//        for (const auto & arg : funct_args) {
-//            args.push_back(arg.get<std::string>());
-//        }
-//
-//        const auto funct_deps = funct.at("dependencies");
-//        int dep_a = -1, dep_b = -1;
-//        if (funct_deps.size() > 0) {
-//            dep_a = funct_deps.at(0).get<int>();
-//        }
-//        if (funct_deps.size() == 2) {
-//            dep_b = funct_deps.at(1).get<int>();
-//        }
-//
-//        function.emplace_back(funct_name, args, dep_a, dep_b);
-//    }
-//
-//
-//    std::vector<std::string> answers;
-//
-//    auto t1 = high_resolution_clock::now();
-//    for (int i = 0; i < 5000; i++) {
-//        auto ans = executor.execute_program(function);
-//        answers.push_back(ans);
-//    }
-//    auto t2 = high_resolution_clock::now();
-//    auto ms_int = duration_cast<milliseconds>(t2 - t1);
-//    duration<double, std::milli> ms_double = t2 - t1;
-//
-//    std::cout << ms_int.count() << "ms\n";
-//    std::cout << ms_double.count() << "ms\n";
-//
-//    exit(0);
-
-    // Test Speed-------------------------------
 
 
 //    for (const auto & program : kopl) {
@@ -96,7 +47,7 @@ int main() {
     bool trace = true;
 
     auto t1 = high_resolution_clock::now();
-    for (int i = 0; i < kopl.size(); i++) {
+    for (std::size_t i = 0; i < kopl.size(); i++) {
         const auto & program = kopl.at(i);
 //            if (program.at("answer").get<std::string>() != "no" &&
 //                    train_problem_program.find(i) == train_problem_program.end()) {

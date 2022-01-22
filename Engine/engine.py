@@ -215,6 +215,7 @@ def parse_program(prog : dict):
         func_deps = func["dependencies"]
         func_inpt = func["inputs"]
 
+
         dep_a = -1
         dep_b = -2
         if len(func_deps) > 0:
@@ -227,7 +228,6 @@ def parse_program(prog : dict):
             function_arguments.push(x)
 
         function = Function(func_name, function_arguments, dep_a, dep_b)
-        functions.append(function)
 
         program.push(function)
     return program
@@ -236,13 +236,17 @@ def parse_program(prog : dict):
 if __name__ == "__main__":
     # executor = init("kb.json")
     executor = init("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json")
-    programs = json.load(open("kopl.json"))
+
+    # programs = json.load(open("kopl_sample.json"))
+    programs = json.load(open("kopl_sample.json"))
 
 
     functions = []
 
     s = time.time()
+    total_num = error_num = 0
     for i in tqdm(range(len(programs))):
+        total_num += 1
     # for i in range(len(programs)):
 
         ansr = programs[i]["answer"]
@@ -251,6 +255,9 @@ if __name__ == "__main__":
         pred = forward(executor, prog, False)
         if (ansr != pred):
             print(i, ansr, pred)
+            error_num += 1
+
+    print(error_num / total_num)
 
     e = time.time()
     print(e - s)

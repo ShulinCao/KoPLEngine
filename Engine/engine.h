@@ -135,7 +135,7 @@ private:
     // TODO: Attribute Name
     std::vector<std::string>                                                    _attribute_name;
     std::map<std::string, int>                                                  _attribute_name_to_number;
-    std::map<std::string, unsigned short>                                       _key_type;                  // Modify in _parseQualifier, and when parsing attribute values
+    std::unordered_map<std::string, unsigned short>                             _key_type;                  // Modify in _parseQualifier, and when parsing attribute values
 
     // TODO: Relation Name
     std::vector<std::string>                                                    _relation_name;
@@ -151,24 +151,27 @@ private:
 
 
     // Record entities that have some attribute (not the attribute value)
-    std::map<std::string, std::set<int>>                              _attribute_key_to_entities;
+    std::unordered_map<std::string, std::set<int>>                              _attribute_key_to_entities;
 
     // Record entities that are pointed to by the relation
-    std::map<RelationIndex, std::vector<EntityPairIndex>>                       _relation_to_entity_pair;
+//    std::map<RelationIndex, std::vector<EntityPairIndex>>                       _relation_to_entity_pair;
     std::map<EntityPairIndex, std::vector<RelationIndex>>                       _entity_pair_to_relation;
 
-    std::map<RelationIndex, std::unordered_map<int, std::vector<int>>>                    _relation_in_entity_index;
+    std::map<RelationIndex, std::unordered_map<int, std::vector<int>>>          _relation_in_entity_index;
     std::map<EntityPairIndex, std::vector<int>>                                 _entity_forward_relation_index;
 
     // Record all entities
     std::shared_ptr<EntitiesWithFacts>                                          _all_entities;
 
+    // FindAll + Filter Index
     // Record entities of each instance
     std::vector<std::set<int>>                                                  _concept_has_instance_entities;
+    std::map<std::string, std::shared_ptr<EntitiesWithFacts>>                                    _find_all_filter_str_index;
 
     // Will modify key type
     void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
     void _addKeyType(const std::string & key, unsigned short type);
+    void _addFindAllFilterIndex(const std::string & attribute_key, const std::shared_ptr<Attribute> & attribute, int cur_entity_number);
 
     std::shared_ptr<EntitiesWithFacts>
     _filter_qualifier(
@@ -237,6 +240,12 @@ public:
             const std::string & string_key,                             // arg1
             const std::string & string_value                            // arg2
             ) const;
+
+    std::shared_ptr<EntitiesWithFacts>
+    findAllFilterStr(
+            const std::string & string_key,                             // arg1
+            const std::string & string_value                            // arg2
+    ) const;
 
     std::shared_ptr<EntitiesWithFacts>
     filterNum(
