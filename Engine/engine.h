@@ -234,6 +234,11 @@ public:
             ) const;
 
     std::shared_ptr<EntitiesWithFacts>
+    findAllFilterConcept(
+            const std::string & concept_name                            // arg1
+    ) const;
+
+    std::shared_ptr<EntitiesWithFacts>
     filterStr(
             const std::shared_ptr<EntitiesWithFacts> & entity_ids,
 

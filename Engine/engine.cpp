@@ -446,8 +446,6 @@ Engine::_filter_attribute(
     entity_with_fact_ptr -> first = std::make_shared<Entities>();
     entity_with_fact_ptr -> second = std::make_shared<Facts>();
 
-//    std::sort(entity_ids -> first -> begin(), entity_ids -> second -> end());
-
     std::set<int> entity_ids_set;
     for (const auto x : *(entity_ids -> first)) {
         entity_ids_set.insert(x);
@@ -528,7 +526,7 @@ Engine::filterConcept(
     }
 
     std::set<int> entity_set;
-    for (const auto& concept_num : concept_numbers) {
+    for (const auto & concept_num : concept_numbers) {
         auto concept_inst = _concept_has_instance_entities.at(concept_num);
         entity_set.insert(concept_inst.begin(), concept_inst.end());
     }
@@ -540,6 +538,26 @@ Engine::filterConcept(
     entity_ids_set.insert(entity_ids -> first -> begin(), entity_ids -> first -> end());
 
     std::set_intersection(entity_ids_set.begin(), entity_ids_set.end(), entity_set.begin(), entity_set.end(), std::back_inserter(* output_entities -> first));
+
+    return output_entities;
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::findAllFilterConcept(
+        const std::string & concept_name) const {
+
+    auto concept_numbers = std::vector<int>();
+    if (_concept_name_to_number.find(concept_name) != _concept_name_to_number.end()) {
+        concept_numbers = _concept_name_to_number.at(concept_name);
+    }
+
+    auto output_entities = std::make_shared<EntitiesWithFacts>();
+    output_entities -> first = std::make_shared<Entities>();
+
+    for (const auto & concept_num : concept_numbers) {
+        auto concept_inst = _concept_has_instance_entities.at(concept_num);
+        output_entities -> first -> insert(output_entities -> first -> end(), concept_inst.begin(), concept_inst.end());
+    }
 
     return output_entities;
 }

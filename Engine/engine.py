@@ -238,7 +238,7 @@ if __name__ == "__main__":
     executor = init("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json")
 
     # programs = json.load(open("kopl_sample.json"))
-    programs = json.load(open("kopl_sample.json"))
+    programs = json.load(open("kopl.json"))
 
 
     functions = []

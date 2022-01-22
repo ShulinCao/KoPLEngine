@@ -41,6 +41,10 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                     (*program)[i + 1].function_name = "FindAllFilterStr";
                     continue;
                 }
+                if (i < program -> size() - 1 && (*program)[i + 1].function_name == "FilterConcept") {
+                    (*program)[i + 1].function_name = "FindAllFilterConcept";
+                    continue;
+                }
 
                 auto function_res = executor_engine -> findAll();
 
@@ -70,6 +74,14 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
             }
+            else if (cur_function.function_name == "FindAllFilterConcept") {
+                auto function_res = executor_engine -> findAllFilterConcept(
+                        cur_function.function_args[0]
+                );
+
+                entity_with_fact_buffer[i] = function_res;
+                entity_with_fact_indicator[i] = 1;
+            }
             else if (cur_function.function_name == "FilterStr") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
                     std::cerr << "Dependency Error, i = " << cur_function.function_name << std::endl;
@@ -93,8 +105,6 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                         cur_function.function_args[0],
                         cur_function.function_args[1]
                 );
-
-//                std::cout << "Hey I am Here\n";
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
