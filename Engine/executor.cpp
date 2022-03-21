@@ -45,6 +45,10 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                     (*program)[i + 1].function_name = "FindAllFilterConcept";
                     continue;
                 }
+                if (i < program -> size() - 1 && (*program)[i + 1].function_name == "FilterNum") {
+                    (*program)[i + 1].function_name = "FindAllFilterNum";
+                    continue;
+                }
 
                 auto function_res = executor_engine -> findAll();
 
@@ -120,6 +124,16 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 auto function_res = executor_engine -> filterNum(
                         dependency_a,
 
+                        cur_function.function_args[0],
+                        cur_function.function_args[1],
+                        cur_function.function_args[2]
+                );
+
+                entity_with_fact_buffer[i] = function_res;
+                entity_with_fact_indicator[i] = 1;
+            }
+            else if (cur_function.function_name == "FindAllFilterNum") {
+                auto function_res = executor_engine -> findAllFilterNum(
                         cur_function.function_args[0],
                         cur_function.function_args[1],
                         cur_function.function_args[2]

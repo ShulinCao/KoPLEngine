@@ -42,7 +42,27 @@ void Engine::_addFindAllFilterIndex(
         _find_all_filter_str_index[index_key] -> second -> push_back(attribute);
     }
     else if (attribute -> attribute_value -> type == BaseValue::int_type || attribute -> attribute_value -> type == BaseValue::float_type) {
+        auto quan_ptr = std::dynamic_pointer_cast<QuantityValue>(attribute -> attribute_value);
 
+        double num_value = quan_ptr -> value;
+        auto num_unit = quan_ptr -> unit;
+        
+        std::string index_key{attribute_key};
+        index_key += "__$$__";
+        index_key += num_unit;
+        
+        if (_find_all_filter_num_index.find(index_key) == _find_all_filter_num_index.end()) {
+            _find_all_filter_num_index[index_key] = std::make_shared<NumIndex>();
+            
+        }
+        if (_find_all_filter_num_index[index_key] -> find(num_value) == _find_all_filter_num_index[index_key] -> end()) {
+            (*_find_all_filter_num_index[index_key])[num_value] = std::make_shared<EntitiesWithFacts>();
+            (*_find_all_filter_num_index[index_key])[num_value] -> first = std::make_shared<Entities>();
+            (*_find_all_filter_num_index[index_key])[num_value] -> second = std::make_shared<Facts>();
+        }
+
+        (*_find_all_filter_num_index[index_key])[num_value] -> first -> push_back(cur_entity_number);
+        (*_find_all_filter_num_index[index_key])[num_value] -> second -> push_back(attribute);
     }
     else if (attribute -> attribute_value -> type == BaseValue::year_type) {
 
@@ -337,6 +357,34 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     std::cout << "End of initialize a new KB\n";
 }
 
+Engine::~Engine() {
+    // Release _entity_name_to_number
+    for (auto entity_name_number_kv_pair : _entity_name_to_number) {
+        entity_name_number_kv_pair.second.reset();
+    }
+
+    // Release _entity_attribute
+    for (auto str_attr_map : _entity_attribute) {
+        for (auto str_attr_kv_pair : str_attr_map) {
+            for (auto attr_ptr : str_attr_kv_pair.second) {
+                attr_ptr->attribute_value.reset();
+                attr_ptr.reset();
+            }
+        }
+    }
+    
+    // Release _entity_relation
+    for (auto rela_vec : _entity_relation) {
+        for (auto rela_ptr : rela_vec) {
+            rela_ptr.reset();
+        }
+    }
+
+    // Release _all_entities
+    _all_entities->first.reset();
+    _all_entities->second.reset();
+}
+
 void Engine::examineEntityAttribute() const {
     for (std::size_t i = 0; i < _entity_name.size(); i++) {
         std::cout << "Name: " << _entity_name[i] << ", Taxonomy: ";
@@ -603,6 +651,77 @@ Engine::filterNum(
     auto value_to_compare = std::make_shared<QuantityValue>(number_value);
     auto return_pairs = _filter_attribute(entity_ids, number_key, value_to_compare, op);
     return return_pairs;
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::findAllFilterNum(
+        const std::string & number_key,
+        const std::string & number_value,
+        const std::string & op) const {
+    auto pos = number_value.find_first_of(' ');
+    std::string number_digits, number_unit;
+    if (pos != std::string::npos) {
+        number_digits = number_value.substr(0, pos);
+        number_unit = number_value.substr(pos + 1);
+    }
+    else {
+        number_digits = number_value;
+        number_unit = "1";
+    }
+    
+    auto digits = std::atof(number_digits.c_str());
+
+    std::string index_key{number_key};
+    index_key += "__$$__";
+    index_key += number_unit;
+
+    std::shared_ptr<EntitiesWithFacts> entity_with_fact_ptr;
+    entity_with_fact_ptr = std::make_shared<EntitiesWithFacts>();
+    entity_with_fact_ptr -> first = std::make_shared<Entities>();
+    entity_with_fact_ptr -> second = std::make_shared<Facts>();
+
+    if (_find_all_filter_num_index.find(index_key) != _find_all_filter_num_index.end()) {
+        if (op == "==") {
+            if(_find_all_filter_num_index.at(index_key) -> find(digits) != _find_all_filter_num_index.at(index_key) -> end()) {
+                return _find_all_filter_num_index.at(index_key) -> at(digits);
+            }
+        }
+        else {
+            // To process "!=", combine methods of processing "<" and ">"
+            if (op == "<" || op == "!=") {
+                auto lowerBound = _find_all_filter_num_index.at(index_key) -> lower_bound(digits);
+                for (auto it = _find_all_filter_num_index.at(index_key) -> begin(); it != lowerBound; ++it) {
+                    entity_with_fact_ptr -> first -> insert(
+                        entity_with_fact_ptr -> first -> end(),
+                        it -> second -> first -> begin(),
+                        it -> second -> first -> end()
+                    );
+                    entity_with_fact_ptr -> second -> insert(
+                        entity_with_fact_ptr -> second -> end(),
+                        it -> second -> second -> begin(),
+                        it -> second -> second -> end()
+                    );
+                }
+            }
+            if (op == ">" || op == "!=") {
+                auto upperBound = _find_all_filter_num_index.at(index_key) -> upper_bound(digits);
+                for (auto it = upperBound; it != _find_all_filter_num_index.at(index_key) -> end(); ++it) {
+                    entity_with_fact_ptr -> first -> insert(
+                        entity_with_fact_ptr -> first -> end(),
+                        it -> second -> first -> begin(),
+                        it -> second -> first -> end()
+                    );
+                    entity_with_fact_ptr -> second -> insert(
+                        entity_with_fact_ptr -> second -> end(),
+                        it -> second -> second -> begin(),
+                        it -> second -> second -> end()
+                    );
+                }
+            }
+        }
+    }
+
+    return entity_with_fact_ptr;
 }
 
 std::shared_ptr<Engine::EntitiesWithFacts>

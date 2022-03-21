@@ -39,6 +39,14 @@ enum SelectOperator{
 class Fact {
 public:
     Qualifiers                                                  fact_qualifiers;
+    
+    ~Fact() {
+        for (auto &kv_pair : fact_qualifiers) {
+            for (auto val_ptr : kv_pair.second) {
+                val_ptr.reset();
+            }
+        }
+    }
 };
 
 
@@ -167,6 +175,8 @@ private:
     // Record entities of each instance
     std::vector<std::set<int>>                                                  _concept_has_instance_entities;
     std::map<std::string, std::shared_ptr<EntitiesWithFacts>>                                    _find_all_filter_str_index;
+    typedef std::map<double, std::shared_ptr<EntitiesWithFacts>> NumIndex;
+    std::map<std::string, std::shared_ptr<NumIndex>>             _find_all_filter_num_index;
 
     // Will modify key type
     void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
@@ -199,6 +209,8 @@ private:
             ) const;
 public:
     explicit Engine(std::string & kb_file_name, int worker_num = 4);
+
+    ~Engine();
 
     void examineEntityAttribute()   const;
     void examineRelation()          const;
@@ -256,6 +268,13 @@ public:
     filterNum(
             const std::shared_ptr<EntitiesWithFacts> & entity_ids,
 
+            const std::string & number_key,                             // arg1
+            const std::string & number_value,                           // arg2
+            const std::string & op                                      // arg3
+            ) const;
+
+    std::shared_ptr<EntitiesWithFacts>
+    findAllFilterNum(
             const std::string & number_key,                             // arg1
             const std::string & number_value,                           // arg2
             const std::string & op                                      // arg3
