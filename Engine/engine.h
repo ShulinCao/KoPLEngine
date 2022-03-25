@@ -178,6 +178,11 @@ private:
     typedef std::map<double, std::shared_ptr<EntitiesWithFacts>> NumIndex;
     std::map<std::string, std::shared_ptr<NumIndex>>             _find_all_filter_num_index;
 
+    typedef std::map<YearValue, std::shared_ptr<EntitiesWithFacts>> YearIndex;
+    typedef std::map<DateValue, std::shared_ptr<EntitiesWithFacts>> DateIndex;
+    std::map<std::string, std::shared_ptr<YearIndex>>       _find_all_filter_year_index;
+    std::map<std::string, std::shared_ptr<DateIndex>>       _find_all_filter_date_index;
+
     // Will modify key type
     void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
     void _addKeyType(const std::string & key, unsigned short type);
@@ -290,6 +295,13 @@ public:
             ) const;
 
     std::shared_ptr<EntitiesWithFacts>
+    findAllFilterYear(
+            const std::string & year_key,                               // arg1
+            const std::string & year_value,                             // arg2
+            const std::string & op                                      // arg3
+            ) const;
+
+    std::shared_ptr<EntitiesWithFacts>
     filterDate(
             const std::shared_ptr<EntitiesWithFacts> & entity_ids,
 
@@ -298,6 +310,12 @@ public:
             const std::string & op                                      // arg3
             ) const;
 
+    std::shared_ptr<EntitiesWithFacts>
+    findAllFilterDate(
+            const std::string & date_key,                               // arg1
+            const std::string & date_value,                             // arg2
+            const std::string & op                                      // arg3
+            ) const;
 
     std::shared_ptr<EntitiesWithFacts>
     QfilterStr(

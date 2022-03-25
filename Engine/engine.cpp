@@ -65,10 +65,36 @@ void Engine::_addFindAllFilterIndex(
         (*_find_all_filter_num_index[index_key])[num_value] -> second -> push_back(attribute);
     }
     else if (attribute -> attribute_value -> type == BaseValue::year_type) {
+        auto year_key = attribute_key;
+        auto year_value_ptr = std::dynamic_pointer_cast<YearValue>(attribute -> attribute_value);
+
+        if (_find_all_filter_year_index.find(year_key) == _find_all_filter_year_index.end()) {
+            _find_all_filter_year_index[year_key] = std::make_shared<YearIndex>();
+        }
+        if (_find_all_filter_year_index[year_key] -> find(*year_value_ptr) == _find_all_filter_year_index[year_key] -> end()) {
+            (*_find_all_filter_year_index[year_key])[*year_value_ptr] = std::make_shared<EntitiesWithFacts>();
+            (*_find_all_filter_year_index[year_key])[*year_value_ptr] -> first = std::make_shared<Entities>();
+            (*_find_all_filter_year_index[year_key])[*year_value_ptr] -> second = std::make_shared<Facts>();
+        }
+        (*_find_all_filter_year_index[year_key])[*year_value_ptr] -> first -> push_back(cur_entity_number);
+        (*_find_all_filter_year_index[year_key])[*year_value_ptr] -> second -> push_back(attribute);
+
 
     }
     else if (attribute -> attribute_value -> type == BaseValue::date_type) {
+        auto date_key = attribute_key;
+        auto date_value_ptr = std::dynamic_pointer_cast<DateValue>(attribute -> attribute_value);
 
+        if (_find_all_filter_date_index.find(date_key) == _find_all_filter_date_index.end()) {
+            _find_all_filter_date_index[date_key] = std::make_shared<DateIndex>();
+        }
+        if (_find_all_filter_date_index[date_key] -> find(*date_value_ptr) == _find_all_filter_date_index[date_key] -> end()) {
+            (*_find_all_filter_date_index[date_key])[*date_value_ptr] = std::make_shared<EntitiesWithFacts>();
+            (*_find_all_filter_date_index[date_key])[*date_value_ptr] -> first = std::make_shared<Entities>();
+            (*_find_all_filter_date_index[date_key])[*date_value_ptr] -> second = std::make_shared<Facts>();
+        }
+        (*_find_all_filter_date_index[date_key])[*date_value_ptr] -> first -> push_back(cur_entity_number);
+        (*_find_all_filter_date_index[date_key])[*date_value_ptr] -> second -> push_back(attribute);
     }
 }
 
@@ -355,6 +381,25 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
 //    examineEntityPairIndex();
 
     std::cout << "End of initialize a new KB\n";
+/*    std::ofstream year_index("date_index.txt", std::ios::out);
+    for (const auto year_key_entry : _find_all_filter_date_index) {
+        year_index << year_key_entry.first << std::endl;
+        if (year_key_entry.second.get()) {
+            for (const auto year_value_entry : *year_key_entry.second) {
+                auto tmp = year_value_entry.first.toPrintStr();
+                year_index << "    " << tmp;
+                if (year_value_entry.second.get() && year_value_entry.second->first.get()) {
+                    for (const auto _id : *(year_value_entry.second->first)) {
+                        year_index << " " << _id;
+                    }
+                }
+                year_index << std::endl;
+            }
+        }
+        year_index << std::endl;
+    }
+    year_index.close();
+    */
 }
 
 Engine::~Engine() {
@@ -681,7 +726,7 @@ Engine::findAllFilterNum(
     entity_with_fact_ptr -> second = std::make_shared<Facts>();
 
     if (_find_all_filter_num_index.find(index_key) != _find_all_filter_num_index.end()) {
-        if (op == "==") {
+        if (op[0] == '=') {
             if(_find_all_filter_num_index.at(index_key) -> find(digits) != _find_all_filter_num_index.at(index_key) -> end()) {
                 return _find_all_filter_num_index.at(index_key) -> at(digits);
             }
@@ -730,9 +775,139 @@ Engine::filterYear(
         const std::string & year_key,
         const std::string & year_value,
         const std::string & op) const {
+//    std::cout << year_key << " " << year_value << " " << op << std::endl;
     auto value_to_compare = std::make_shared<YearValue>(year_value);
     auto return_pairs = _filter_attribute(entity_ids, year_key, value_to_compare, op);
     return return_pairs;
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::findAllFilterYear(
+        const std::string & year_key,
+        const std::string &year_value,
+        const std::string &op) const {
+    std::shared_ptr<EntitiesWithFacts> entity_with_fact_ptr;
+    entity_with_fact_ptr = std::make_shared<EntitiesWithFacts>();
+    entity_with_fact_ptr -> first = std::make_shared<Entities>();
+    entity_with_fact_ptr -> second = std::make_shared<Facts>();
+
+//    std::ofstream search_year_pair("search_year_pair.txt", std::ios::app);
+//    search_year_pair << year_key << " " << year_value << " " << op << std::endl;
+//    search_year_pair.close();
+
+    auto value_to_compare = YearValue(year_value);
+
+    if (_find_all_filter_year_index.find(year_key) != _find_all_filter_year_index.end()) {
+        if (op[0] == '=') {
+            if (_find_all_filter_year_index.at(year_key) -> find(value_to_compare) != _find_all_filter_year_index.at(year_key) -> end()) {
+                entity_with_fact_ptr -> first -> insert(
+                        entity_with_fact_ptr -> first -> end(),
+                        _find_all_filter_year_index.at(year_key) -> at(value_to_compare) -> first -> begin(),
+                        _find_all_filter_year_index.at(year_key) -> at(value_to_compare) -> first -> end()
+                );
+                entity_with_fact_ptr -> second -> insert(
+                        entity_with_fact_ptr -> second -> end(),
+                        _find_all_filter_year_index.at(year_key) -> at(value_to_compare) -> second -> begin(),
+                        _find_all_filter_year_index.at(year_key) -> at(value_to_compare) -> second -> end()
+                );
+            }
+        }
+        else {
+            // To process "!=", combine methods of processing "<" and ">"
+            if (op == "<" || op == "!=") {
+                auto lowerBound = _find_all_filter_year_index.at(year_key) -> lower_bound(value_to_compare);
+                for (auto it = _find_all_filter_year_index.at(year_key) -> begin(); it != lowerBound; ++it) {
+                    entity_with_fact_ptr -> first -> insert(
+                            entity_with_fact_ptr -> first -> end(),
+                            it -> second -> first -> begin(),
+                            it -> second -> first -> end()
+                    );
+                    entity_with_fact_ptr -> second -> insert(
+                            entity_with_fact_ptr -> second -> end(),
+                            it -> second -> second -> begin(),
+                            it -> second -> second -> end()
+                    );
+                }
+            }
+            if (op == ">" || op == "!=") {
+                auto upperBound = _find_all_filter_year_index.at(year_key) -> upper_bound(value_to_compare);
+                for (auto it = upperBound; it != _find_all_filter_year_index.at(year_key) -> end(); ++it) {
+                    entity_with_fact_ptr -> first -> insert(
+                            entity_with_fact_ptr -> first -> end(),
+                            it -> second -> first -> begin(),
+                            it -> second -> first -> end()
+                    );
+                    entity_with_fact_ptr -> second -> insert(
+                            entity_with_fact_ptr -> second -> end(),
+                            it -> second -> second -> begin(),
+                            it -> second -> second -> end()
+                    );
+                }
+            }
+        }
+    }
+
+    if (year_value[0] == '-') {
+        return entity_with_fact_ptr;
+    }
+
+    auto dateLowerBound = DateValue(year_value + "-01-01");
+    auto dateUpperBound = DateValue(year_value + "-12-31");
+    auto date_key = year_key;
+
+    if (_find_all_filter_date_index.find(date_key) != _find_all_filter_date_index.end()) {
+        if (op[0] == '=') {
+            auto lowerBound = _find_all_filter_date_index.at(date_key) -> lower_bound(dateLowerBound);
+            auto upperBound = _find_all_filter_date_index.at(date_key) -> upper_bound(dateUpperBound);
+            for (auto it = lowerBound; it != upperBound; ++it) {
+                entity_with_fact_ptr -> first -> insert(
+                        entity_with_fact_ptr -> first -> end(),
+                        it -> second -> first -> begin(),
+                        it -> second -> first -> end()
+                );
+                entity_with_fact_ptr -> second -> insert(
+                        entity_with_fact_ptr -> second -> end(),
+                        it -> second -> second -> begin(),
+                        it -> second -> second -> end()
+                );
+            }
+        }
+        else {
+            // To process "!=", combine methods of process "<" and ">"
+            if (op == "<" || op == "!=") {
+                auto lowerBound = _find_all_filter_date_index.at(date_key) -> lower_bound(dateLowerBound);
+                for (auto it = _find_all_filter_date_index.at(date_key) -> begin(); it != lowerBound; ++it) {
+                    entity_with_fact_ptr -> first -> insert(
+                            entity_with_fact_ptr -> first -> end(),
+                            it -> second -> first -> begin(),
+                            it -> second -> first -> end()
+                    );
+                    entity_with_fact_ptr -> second -> insert(
+                            entity_with_fact_ptr -> second -> end(),
+                            it -> second -> second -> begin(),
+                            it -> second -> second -> end()
+                    );
+                }
+            }
+            if (op == ">" || op == "!=") {
+                auto upperBound = _find_all_filter_date_index.at(date_key) -> upper_bound(dateUpperBound);
+                for (auto it = upperBound; it != _find_all_filter_date_index.at(date_key) -> end(); ++it) {
+                    entity_with_fact_ptr -> first -> insert(
+                            entity_with_fact_ptr -> first -> end(),
+                            it -> second -> first -> begin(),
+                            it -> second -> first -> end()
+                    );
+                    entity_with_fact_ptr -> second -> insert(
+                            entity_with_fact_ptr -> second -> end(),
+                            it -> second -> second -> begin(),
+                            it -> second -> second -> end()
+                    );
+                }
+            }
+        }
+    }
+
+    return entity_with_fact_ptr;
 }
 
 std::shared_ptr<Engine::EntitiesWithFacts>
@@ -744,6 +919,62 @@ Engine::filterDate(
     auto value_to_compare = std::make_shared<DateValue>(date_value);
     auto return_pairs = _filter_attribute(entity_ids, date_key, value_to_compare, op);
     return return_pairs;
+}
+
+std::shared_ptr<Engine::EntitiesWithFacts>
+Engine::findAllFilterDate(
+        const std::string & date_key,
+        const std::string & date_value,
+        const std::string & op) const {
+    std::shared_ptr<EntitiesWithFacts> entity_with_fact_ptr;
+    entity_with_fact_ptr = std::make_shared<EntitiesWithFacts>();
+    entity_with_fact_ptr -> first = std::make_shared<Entities>();
+    entity_with_fact_ptr -> second = std::make_shared<Facts>();
+
+    auto value_to_compare = DateValue(date_value);
+
+    if (_find_all_filter_date_index.find(date_key) != _find_all_filter_date_index.end()) {
+        if (op[0] == '=') {
+            if (_find_all_filter_date_index.at(date_key) -> find(value_to_compare) != _find_all_filter_date_index.at(date_key) -> end()) {
+                return _find_all_filter_date_index.at(date_key) -> at(value_to_compare);
+            }
+        }
+        else {
+            // To process "!=", combine methods of process "<" and ">"
+            if (op == "<" || op == "!=") {
+                auto lowerBound = _find_all_filter_date_index.at(date_key) -> lower_bound(value_to_compare);
+                for (auto it = _find_all_filter_date_index.at(date_key) -> begin(); it != lowerBound; ++it) {
+                    entity_with_fact_ptr -> first -> insert(
+                            entity_with_fact_ptr -> first -> end(),
+                            it -> second -> first -> begin(),
+                            it -> second -> first -> end()
+                    );
+                    entity_with_fact_ptr -> second -> insert(
+                            entity_with_fact_ptr -> second -> end(),
+                            it -> second -> second -> begin(),
+                            it -> second -> second -> end()
+                    );
+                }
+            }
+            if (op == ">" || op == "!=") {
+                auto upperBound = _find_all_filter_date_index.at(date_key) -> upper_bound(value_to_compare);
+                for (auto it = upperBound; it != _find_all_filter_date_index.at(date_key) -> end(); ++it) {
+                    entity_with_fact_ptr -> first -> insert(
+                            entity_with_fact_ptr -> first -> end(),
+                            it -> second -> first -> begin(),
+                            it -> second -> first -> end()
+                    );
+                    entity_with_fact_ptr -> second -> insert(
+                            entity_with_fact_ptr -> second -> end(),
+                            it -> second -> second -> begin(),
+                            it -> second -> second -> end()
+                    );
+                }
+            }
+        }
+    }
+
+    return entity_with_fact_ptr;
 }
 
 VerifyResult

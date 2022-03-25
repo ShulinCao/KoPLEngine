@@ -66,6 +66,7 @@ class StringValue;
 class QuantityValue;
 class DateValue;
 class YearValue;
+class TimestampValue;
 
 class StringValue: public BaseValue {
 public:
@@ -144,6 +145,7 @@ public:
 
     explicit DateValue(const std::string & val, unsigned short type = date_type) : BaseValue(type) {
         assert (type == date_type);
+        assert(val[0] != '-');
 
         size_t begin = 0;
         for (size_t i = 0; i < val.size(); i++) {

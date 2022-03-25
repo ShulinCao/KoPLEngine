@@ -47,6 +47,7 @@ int main() {
     bool trace = true;
 
     auto t1 = high_resolution_clock::now();
+//    for (auto i : train_problem_program) {
     for (std::size_t i = 0; i < kopl.size(); i++) {
         const auto & program = kopl.at(i);
 //            if (program.at("answer").get<std::string>() != "no" &&
