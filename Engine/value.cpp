@@ -371,8 +371,8 @@ bool YearValue::operator!=(const YearValue & compare_value) const {
 //}
 
 std::string YearValue::toPrintStr() const {
-    char year_str[10];
-    sprintf(year_str, "%d", value);
+    char year_str[20];
+    sprintf(year_str, "%lld", value);
     return std::string{year_str};
 }
 
