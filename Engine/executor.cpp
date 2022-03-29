@@ -609,3 +609,8 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
     return answer;
 }
+
+std::shared_ptr<Engine::GraphContainer>
+Executor::expand_from_entities(const std::vector<std::string> * entity_ids, int jump_limitation) {
+    return executor_engine -> expandFromEntities(entity_ids, jump_limitation);
+}

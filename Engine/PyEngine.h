@@ -121,10 +121,37 @@ extern "C" {
     }
 }
 
+extern "C" {
+    Engine::GraphContainer * new_graph_container() {
+        return new Engine::GraphContainer;
+    }
+
+    void delete_graph_container(Engine::GraphContainer * p) {
+        delete p;
+    }
+
+    const char * get_entity_id_at(Engine::GraphContainer * p, int i) {
+        return p -> entity_ids.at(i).c_str();
+    }
+
+    const char * get_entity_attribute_at(Engine::GraphContainer * p, int i) {
+        return p -> entity_attributes.at(i).c_str();
+    }
+
+    const char * get_entity_relation_at(Engine::GraphContainer * p, int i) {
+        return p -> entity_relations.at(i).c_str();
+    }
+
+    int graph_container_size(Engine::GraphContainer * p) {
+        return p -> entity_ids.size();
+    }
+}
+
 
 extern "C" {
     Executor * init(const char * kb_file_name, int worker_num);
     const char * execute(Executor * e, vector<Function> * program, char * print_buffer, bool trace = false);
+    void expand_from_entities(Executor * e, Engine::GraphContainer * container, vector<string> * entity_ids, int jump_limitation);
 }
 
 

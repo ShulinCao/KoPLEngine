@@ -96,6 +96,44 @@ class StringVector(object):
         x = x.encode("utf-8")
         lib.string_vector_push_back(self.string_vector, c_char_p(x))
 
+class GraphContainer(object):
+    lib.new_graph_container.restype = c_void_p
+    lib.new_graph_container.argtypes = []
+
+    lib.delete_graph_container.restype = None
+    lib.delete_graph_container.argtypes = [c_void_p]
+
+    lib.get_entity_id_at.restype = c_char_p
+    lib.get_entity_id_at.argtypes = [c_void_p, c_int]
+
+    lib.get_entity_attribute_at.restype = c_char_p
+    lib.get_entity_attribute_at.argtypes = [c_void_p, c_int]
+
+    lib.get_entity_relation_at.restype = c_char_p
+    lib.get_entity_relation_at.argtypes = [c_void_p, c_int]
+
+    lib.graph_container_size.restype = c_int
+    lib.graph_container_size.argtypes = [c_void_p]
+
+    def __init__(self):
+        self.container = lib.new_graph_container()
+
+    def __del__(self):
+        lib.delete_graph_container(self.container)
+
+    def __len__(self):
+        return lib.graph_container_size(self.container)
+
+    def __getitem__(self, i):
+        if 0 <= i < len(self):
+            rela = json.load(lib.get_entity_relation_at(self.container, c_int(i)).decode('utf-8'))
+            attr = json.load(lib.get_entity_attribute_at(self.container, c_int(i)).decode('utf-8'))
+            item = json.dump({lib.get_entity_id_at(self.container, c_int(i)): {'attributes': attr, 'relations': rela}})
+            return json.load(item.decode('utf-8'))
+        raise IndexError('Graph Container index out of range')
+
+    def __repr__(self):
+        return '[{}]'.format(', '.join(str(self[i]) for i in range(len(self))))
 
 
 class Function(object):

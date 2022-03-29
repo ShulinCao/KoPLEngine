@@ -11,3 +11,17 @@ const char * execute(Executor * e, std::vector<Function> * program, char * print
     strcpy(print_buffer, res.c_str());
     return print_buffer;
 }
+
+void expand_from_entities(Executor * e, Engine::GraphContainer * container, vector<string> * entity_ids, int jump_limitation) {
+    auto res = e -> expand_from_entities(entity_ids, jump_limitation);
+    container -> entity_ids.insert(container -> entity_ids.end(),
+                                   res -> entity_ids.begin(),
+                                   res -> entity_ids.end());
+    container -> entity_attributes.insert(container -> entity_attributes.end(),
+                                          res -> entity_attributes.begin(),
+                                          res -> entity_attributes.end());
+    container -> entity_relations.insert(container -> entity_attributes.end(),
+                                         res -> entity_relations.begin(),
+                                         res -> entity_relations.end());
+    res.reset();
+}

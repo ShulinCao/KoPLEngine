@@ -133,6 +133,9 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     _entity_is_instance_of  .reserve(total_entity_num + total_concept_num);
     _entity_attribute       .reserve(total_entity_num + total_concept_num);
     _entity_relation        .reserve(total_entity_num + total_concept_num);
+    serialStringsOfAttributes.reserve(total_entity_num + total_concept_num);
+    serialStringsOfRelations .reserve(total_entity_num + total_concept_num);
+
 
     // Reserve for Index
     _concept_has_instance_entities.resize(total_concept_num);
@@ -244,6 +247,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             ent_attrs[attribute_key].push_back(attribute);
         }
         _entity_attribute.push_back( ent_attrs );
+        serialStringsOfAttributes.push_back( entity.value().at("attributes").dump() );
     }
 
     // Construct "_entity_relation"
@@ -289,6 +293,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             }
         }
         _entity_relation.push_back(relation);
+        serialStringsOfRelations.push_back( entity.value().at("relations").dump() );
     }
 
     std::cout << "Construct The Inverse Relation\n";
@@ -1365,6 +1370,57 @@ std::shared_ptr<Engine::EntitiesWithFacts> Engine::orOp(
 int Engine::countOp(
         const std::shared_ptr<EntitiesWithFacts> & entities) {
     return (int)(entities -> first -> size());
+}
+
+std::shared_ptr<Engine::GraphContainer>
+Engine::expandFromEntities(
+        const std::vector<std::string> * entity_ids,
+        const int jump_limitation) const {
+    auto subgraph_ptr = std::make_shared<GraphContainer>();
+
+    auto visited_index = std::make_shared<std::set<int>>();
+    auto entities = std::vector<int>();
+    entities.reserve(entity_ids -> size());
+
+    for (const auto id : *entity_ids) {
+        if (_entity_id_to_number.find(id) == _entity_id_to_number.end()) {
+            std::cout << "The entity with " << id << " is not in the KB!" << std::endl;
+            continue;
+        }
+        entities.push_back(_entity_id_to_number.at(id));
+    }
+
+    for (const auto ent : entities) {
+        dfsTraversal(ent, jump_limitation, 0, visited_index, subgraph_ptr);
+    }
+
+    return subgraph_ptr;
+}
+
+void Engine::dfsTraversal(
+        int entity,
+        int depth_limitation,
+        int depth,
+        std::shared_ptr<std::set<int>> & visited_index,
+        std::shared_ptr<GraphContainer> & subgraph_ptr) const {
+    if (depth > depth_limitation) {
+        return;
+    }
+
+    if (visited_index -> find(entity) == visited_index -> end()) {
+        visited_index -> insert(entity);
+        auto entity_id = _entity_id.at(entity);
+        const auto & attributes = serialStringsOfAttributes.at(entity);
+        const auto & relations = serialStringsOfRelations.at(entity);
+        subgraph_ptr -> entity_ids.push_back(entity_id);
+        subgraph_ptr -> entity_attributes.push_back(attributes);
+        subgraph_ptr -> entity_relations.push_back(relations);
+    }
+
+    const auto & relations = _entity_relation.at(entity);
+    for (const auto & rela : relations) {
+        dfsTraversal(rela -> relation_tail_entity, depth_limitation, depth + 1, visited_index, subgraph_ptr);
+    }
 }
 
 

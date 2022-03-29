@@ -60,6 +60,11 @@ private:
 
 public:
     std::string execute_program(std::vector<Function> * program, bool trace = false);
+
+    std::shared_ptr<Engine::GraphContainer>
+    expand_from_entities(
+            const std::vector<std::string> * entity_ids,
+            int jump_limitation);
 };
 
 
