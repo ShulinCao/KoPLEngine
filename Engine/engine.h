@@ -190,8 +190,8 @@ private:
     std::map<std::string, std::shared_ptr<DateIndex>>       _find_all_filter_date_index;
 
     // reserve the serialized string of origin json object
-    std::vector<std::string> serialStringsOfAttributes;
-    std::vector<std::string> serialStringsOfRelations;
+    std::vector<std::string>              serialStringsOfAttributes;
+    std::vector<std::map<int, json>>      jsonsOfRelations;
 
     // Will modify key type
     void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
@@ -492,8 +492,11 @@ public:
 
     void dfsTraversal(
             int entity,
+            int from_entity,
+            std::map<int, int> & from_index,
             int depth_limitation,
             int depth,
+            std::vector<std::vector<json>> & subsetOfRelations,
             std::shared_ptr<std::set<int>> & visited_index,
             std::shared_ptr<GraphContainer> & subgraph_ptr
             ) const;
