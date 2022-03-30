@@ -133,6 +133,9 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
     _entity_is_instance_of  .reserve(total_entity_num + total_concept_num);
     _entity_attribute       .reserve(total_entity_num + total_concept_num);
     _entity_relation        .reserve(total_entity_num + total_concept_num);
+    serialStringsOfAttributes.reserve(total_entity_num + total_concept_num);
+    jsonsOfRelations .reserve(total_entity_num + total_concept_num);
+
 
     // Reserve for Index
     _concept_has_instance_entities.resize(total_concept_num);
@@ -162,6 +165,8 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
         // Reserve Space for _entity_attribute, _entity_relation, _entity_is_instance_of
         _entity_attribute.emplace_back();
         _entity_relation.emplace_back();
+        serialStringsOfAttributes.emplace_back("[]");
+        jsonsOfRelations.emplace_back();
         _entity_is_instance_of.emplace_back();
     }
 
@@ -244,11 +249,13 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             ent_attrs[attribute_key].push_back(attribute);
         }
         _entity_attribute.push_back( ent_attrs );
+        serialStringsOfAttributes.push_back( entity.value().at("attributes").dump() );
     }
 
     // Construct "_entity_relation"
     for (const auto & entity : entity_json.items()) {
         std::vector<std::shared_ptr<Relation>> relation;
+        std::map<int, json> relationJsons;
 
         for (const auto & relation_json : entity.value().at("relations")) {
             auto relation_name_string(relation_json.at("relation").get<std::string>());
@@ -274,6 +281,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             _parseQualifier(rel -> fact_qualifiers, relation_json.at("qualifiers"));
 
             relation.push_back(rel);
+            relationJsons[tail_entity_number] = relation_json;
 
             RelationIndex relation_index(relation_name_string, relation_direction);
             EntityPairIndex entity_pair_index((int)_entity_relation.size(), tail_entity_number);
@@ -289,6 +297,7 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             }
         }
         _entity_relation.push_back(relation);
+        jsonsOfRelations.push_back( relationJsons );
     }
 
     std::cout << "Construct The Inverse Relation\n";
@@ -331,6 +340,15 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
                         (inv_rel -> fact_qualifiers)[qualifier_key].push_back(qualifier_value);
                     }
                 }
+
+                json inverse_relation_json;
+                inverse_relation_json["relation"] = inv_rel -> relation_name;
+                inverse_relation_json["direction"] = inv_rel -> relation_direction == RelationDirection::forward ?
+                        "forward" : "backward";
+                inverse_relation_json["object"] = _entity_id.at(head_entity);
+                inverse_relation_json["qualifiers"] = jsonsOfRelations.at(head_entity).at(tail_entity).at("qualifiers");
+
+                jsonsOfRelations[tail_entity][head_entity] = inverse_relation_json;
 
                 _entity_relation[tail_entity].push_back(inv_rel);
                 auto inv_rel_idx = (int)_entity_relation[tail_entity].size() - 1;
@@ -1365,6 +1383,100 @@ std::shared_ptr<Engine::EntitiesWithFacts> Engine::orOp(
 int Engine::countOp(
         const std::shared_ptr<EntitiesWithFacts> & entities) {
     return (int)(entities -> first -> size());
+}
+
+std::shared_ptr<Engine::GraphContainer>
+Engine::expandFromEntities(
+        const std::vector<std::string> * entity_ids,
+        const int jump_limitation) const {
+    auto subgraph_ptr = std::make_shared<GraphContainer>();
+
+    auto visited_index = std::make_shared<std::set<int>>();
+    auto entities = std::vector<int>();
+    entities.reserve(entity_ids -> size());
+    //std::cout << _entity_relation.size() << std::endl;
+
+    for (const auto & id : *entity_ids) {
+        if (_entity_id_to_number.find(id) == _entity_id_to_number.end()) {
+            std::cout << "The entity with " << id << " is not in the KB!" << std::endl;
+            continue;
+        }
+        entities.push_back(_entity_id_to_number.at(id));
+    }
+
+    //for (auto i : entities) {
+    //    std::cout << i << " " << _entity_id[i] << std::endl;
+    //}
+
+    std::vector<std::vector<json>>   subsetOfRelations;
+    std::map<int, int>               entityToIndex;
+
+    // First, add given ids into the subgraph
+    for (const auto ent : entities) {
+        visited_index -> insert(ent);
+        subgraph_ptr -> entity_ids.push_back(_entity_id.at(ent));
+        subgraph_ptr -> entity_attributes.push_back(serialStringsOfAttributes.at(ent));
+        subgraph_ptr -> entity_relations.push_back("[]");
+        subsetOfRelations.emplace_back();
+        entityToIndex[ent] = subsetOfRelations.size() - 1;
+    }
+
+    if (jump_limitation <= 0) {
+        return subgraph_ptr;
+    }
+
+    for (int i = 0; i < entities.size(); ++i) {
+        for (const auto & relation : _entity_relation.at(entities[i])) {
+            dfsTraversal(relation -> relation_tail_entity, entities[i], entityToIndex, jump_limitation, 1, subsetOfRelations, visited_index, subgraph_ptr);
+        }
+    }
+
+    subgraph_ptr -> entity_relations.clear();
+    
+    for (int i = 0; i < subsetOfRelations.size(); ++i) {
+        json relations = json::array();
+        for (const auto & relation_json : subsetOfRelations.at(i)) {
+            relations.push_back(relation_json);
+        }
+        subgraph_ptr -> entity_relations.push_back(relations.dump());
+    }
+
+    return subgraph_ptr;
+}
+
+void Engine::dfsTraversal(
+        int entity,
+        int from_entity,
+        std::map<int, int> & entityToIndex,
+        int depth_limitation,
+        int depth,
+        std::vector<std::vector<json>> & subsetOfRelations,
+        std::shared_ptr<std::set<int>> & visited_index,
+        std::shared_ptr<GraphContainer> & subgraph_ptr) const {
+    if (visited_index -> find(entity) == visited_index -> end()) {
+        visited_index -> insert(entity);
+
+        auto entity_id = _entity_id.at(entity);
+        //std::cout << entity << " " << entity_id << std::endl;
+        subgraph_ptr -> entity_ids.push_back(entity_id);
+        const auto & attributes = serialStringsOfAttributes.at(entity);
+        subgraph_ptr -> entity_attributes.push_back(attributes);
+        subsetOfRelations.emplace_back();
+        int len = subsetOfRelations.size();
+        entityToIndex[entity] = len - 1;
+        subsetOfRelations[len - 1].push_back(jsonsOfRelations.at(entity).at(from_entity));
+        int from_index = entityToIndex[from_entity];
+        subsetOfRelations[from_index].push_back(jsonsOfRelations.at(from_entity).at(entity));
+    }
+
+    if (depth >= depth_limitation) {
+        return;
+    }
+
+    const auto & relations = _entity_relation.at(entity);
+    for (const auto & rela : relations) {
+        dfsTraversal(rela -> relation_tail_entity, entity, entityToIndex, depth_limitation, depth + 1, subsetOfRelations, visited_index, subgraph_ptr);
+    }
 }
 
 

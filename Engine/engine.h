@@ -120,6 +120,12 @@ public:
 
     typedef std::vector<std::shared_ptr<BaseValue>>                             Values;
 
+    typedef struct {
+        std::vector<std::string> entity_ids;
+        std::vector<std::string> entity_attributes;
+        std::vector<std::string> entity_relations;
+    } GraphContainer;
+
 private:
 
     int                                                                         _worker_num;
@@ -182,6 +188,10 @@ private:
     typedef std::map<DateValue, std::shared_ptr<EntitiesWithFacts>> DateIndex;
     std::map<std::string, std::shared_ptr<YearIndex>>       _find_all_filter_year_index;
     std::map<std::string, std::shared_ptr<DateIndex>>       _find_all_filter_date_index;
+
+    // reserve the serialized string of origin json object
+    std::vector<std::string>              serialStringsOfAttributes;
+    std::vector<std::map<int, json>>      jsonsOfRelations;
 
     // Will modify key type
     void _parseQualifier(Qualifiers & qualifier_output, const json & qualifier_json);
@@ -473,6 +483,24 @@ public:
             ) const;
 
     void programExec(std::vector<std::string> programs) const;
+
+    std::shared_ptr<GraphContainer>
+    expandFromEntities(
+            const std::vector<std::string> * entity_ids,
+            const int jump_limitation
+            ) const;
+
+    void dfsTraversal(
+            int entity,
+            int from_entity,
+            std::map<int, int> & from_index,
+            int depth_limitation,
+            int depth,
+            std::vector<std::vector<json>> & subsetOfRelations,
+            std::shared_ptr<std::set<int>> & visited_index,
+            std::shared_ptr<GraphContainer> & subgraph_ptr
+            ) const;
+
 
 };
 

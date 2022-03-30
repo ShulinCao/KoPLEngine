@@ -5,8 +5,9 @@ import faulthandler
 faulthandler.enable()
 from tqdm import  tqdm
 
-lib = cdll.LoadLibrary('cmake-build-remote19/libKoPL.so')
+# lib = cdll.LoadLibrary('cmake-build-remote19/libKoPL.so')
 # lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib')
+lib = cdll.LoadLibrary('../build/libKoPL.so')
 
 lib.new_char_p.restype = c_void_p
 lib.new_char_p.argtypes = []
@@ -96,6 +97,44 @@ class StringVector(object):
         x = x.encode("utf-8")
         lib.string_vector_push_back(self.string_vector, c_char_p(x))
 
+class GraphContainer(object):
+    lib.new_graph_container.restype = c_void_p
+    lib.new_graph_container.argtypes = []
+
+    lib.delete_graph_container.restype = None
+    lib.delete_graph_container.argtypes = [c_void_p]
+
+    lib.get_entity_id_at.restype = c_char_p
+    lib.get_entity_id_at.argtypes = [c_void_p, c_int]
+
+    lib.get_entity_attribute_at.restype = c_char_p
+    lib.get_entity_attribute_at.argtypes = [c_void_p, c_int]
+
+    lib.get_entity_relation_at.restype = c_char_p
+    lib.get_entity_relation_at.argtypes = [c_void_p, c_int]
+
+    lib.graph_container_size.restype = c_int
+    lib.graph_container_size.argtypes = [c_void_p]
+
+    def __init__(self):
+        self.container = lib.new_graph_container()
+
+    def __del__(self):
+        lib.delete_graph_container(self.container)
+
+    def __len__(self):
+        return lib.graph_container_size(self.container)
+
+    def __getitem__(self, i):
+        if 0 <= i < len(self):
+            rela = json.loads(lib.get_entity_relation_at(self.container, c_int(i)).decode('utf-8'))
+            attr = json.loads(lib.get_entity_attribute_at(self.container, c_int(i)).decode('utf-8'))
+            item = {lib.get_entity_id_at(self.container, c_int(i)).decode('utf-8'): {'attributes': attr, 'relations': rela}}
+            return item
+        raise IndexError('Graph Container index out of range')
+
+    def __repr__(self):
+        return '[{}]'.format(', '.join(str(self[i]) for i in range(len(self))))
 
 
 class Function(object):
@@ -232,13 +271,25 @@ def parse_program(prog : dict):
         program.push(function)
     return program
 
+lib.expand_from_entities.restype = None
+lib.expand_from_entities.argtypes = [c_void_p, c_void_p, c_void_p, c_int]
+def expand_from(executor, entity_ids, jump_limitation):
+    container = GraphContainer()
+    lib.expand_from_entities(executor, container.container, entity_ids.string_vector, c_int(jump_limitation))
+    return container
+
 
 if __name__ == "__main__":
-    # executor = init("kb.json")
-    executor = init("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json")
+    executor = init("../kb.json")
+#    container = test_expannd_from_entities(executor)
+#    for ent in container:
+#        print(ent)
+
+#    executor = init("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json")
 
     # programs = json.load(open("kopl_sample.json"))
-    programs = json.load(open("kopl.json"))
+
+    programs = json.load(open("../problem.json"))
 
 
     functions = []
@@ -261,3 +312,4 @@ if __name__ == "__main__":
 
     e = time.time()
     print(e - s)
+
