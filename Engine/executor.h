@@ -58,13 +58,18 @@ private:
         }
     }
 
+    // TODO: complete this function
+    static std::string _obtain_result(const std::shared_ptr<Engine::GraphContainer> & graph_container) {
+        std::string s = "";
+        for (auto i = 0; i < graph_container -> entity_ids.size(); ++i){
+            s = s + graph_container -> entity_ids[i] + "\t\t" + graph_container -> entity_relations[i] + "\t\t" + graph_container -> entity_attributes[i];
+            s = s + "\n";
+        }
+        return s;
+    }
+
 public:
     std::string execute_program(std::vector<Function> * program, bool trace = false);
-
-    std::shared_ptr<Engine::GraphContainer>
-    expand_from_entities(
-            const std::vector<std::string> * entity_ids,
-            int jump_limitation);
 };
 
 

@@ -626,6 +626,26 @@ Engine::find(const std::string & find_entity_name) const {
     return res_ptr;
 }
 
+std::shared_ptr<Engine::EntitiesWithFacts> Engine::findLinking(const std::string &find_entity_name) const {
+    auto res_ptr = std::make_shared<EntitiesWithFacts>();
+    res_ptr -> first = std::make_shared<Entities>();
+    std::string s = "";
+    for (auto i = 0; i < find_entity_name.length(); ++i){
+        if(find_entity_name[i] == ' '){
+            if (_entity_id_to_number.find(s) != _entity_id_to_number.end()) {
+                res_ptr -> first ->push_back(_entity_id_to_number.at(s));
+            }
+            s = "";
+        }else{
+            s += find_entity_name[i];
+        }
+        if (_entity_id_to_number.find(s) != _entity_id_to_number.end()) {
+            res_ptr -> first ->push_back(_entity_id_to_number.at(s));
+        }
+    }
+    return res_ptr;
+}
+
 std::shared_ptr<Engine::EntitiesWithFacts>
 Engine::filterConcept(
         const std::shared_ptr<EntitiesWithFacts> & entity_ids,
@@ -1387,21 +1407,17 @@ int Engine::countOp(
 
 std::shared_ptr<Engine::GraphContainer>
 Engine::expandFromEntities(
-        const std::vector<std::string> * entity_ids,
+        const std::shared_ptr<Engine::EntitiesWithFacts>& entities_with_fact,
         const int jump_limitation) const {
     auto subgraph_ptr = std::make_shared<GraphContainer>();
 
     auto visited_index = std::make_shared<std::set<int>>();
     auto entities = std::vector<int>();
-    entities.reserve(entity_ids -> size());
+    entities.reserve(entities_with_fact-> first -> size());
     //std::cout << _entity_relation.size() << std::endl;
 
-    for (const auto & id : *entity_ids) {
-        if (_entity_id_to_number.find(id) == _entity_id_to_number.end()) {
-            std::cout << "The entity with " << id << " is not in the KB!" << std::endl;
-            continue;
-        }
-        entities.push_back(_entity_id_to_number.at(id));
+    for (const auto & id : *(entities_with_fact -> first)) {
+        entities.push_back(id);
     }
 
     //for (auto i : entities) {

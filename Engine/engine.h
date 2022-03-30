@@ -252,6 +252,11 @@ public:
             const std::string & find_entity_name                        // arg1
             ) const;
 
+    std::shared_ptr<EntitiesWithFacts>
+    findLinking(
+            const std::string & find_entity_name                        // arg1
+    ) const;
+
 
     std::shared_ptr<EntitiesWithFacts>
     filterConcept(
@@ -486,8 +491,8 @@ public:
 
     std::shared_ptr<GraphContainer>
     expandFromEntities(
-            const std::vector<std::string> * entity_ids,
-            const int jump_limitation
+            const std::shared_ptr<Engine::EntitiesWithFacts>& entities_with_fact,
+            const int jump_limitation = 2
             ) const;
 
     void dfsTraversal(

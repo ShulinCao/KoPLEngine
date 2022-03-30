@@ -69,6 +69,12 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
             }
+            else if (cur_function.function_name == "FindLinking") {
+                auto function_res = executor_engine -> findLinking(cur_function.function_args[0]);
+
+                entity_with_fact_buffer[i] = function_res;
+                entity_with_fact_indicator[i] = 1;
+            }
             else if (cur_function.function_name == "FilterConcept") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
                     std::cerr << "Dependency Error, i = " << cur_function.function_name << std::endl;
@@ -438,6 +444,21 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                     answer = _obtain_result((*function_res)[0]);
                 }
             }
+            else if (cur_function.function_name == "QueryNeighbor") {
+                auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
+
+                auto function_res = executor_engine -> expandFromEntities(
+                        dependency_a
+                );
+
+                // Answer
+                if (function_res -> entity_ids.empty()) {
+                    answer = "None";
+                }
+                else {
+                    answer = _obtain_result(function_res);
+                }
+            }
             else if (cur_function.function_name == "QueryAttrUnderCondition") {
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
 
@@ -608,9 +629,4 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
     }
 
     return answer;
-}
-
-std::shared_ptr<Engine::GraphContainer>
-Executor::expand_from_entities(const std::vector<std::string> * entity_ids, int jump_limitation) {
-    return executor_engine -> expandFromEntities(entity_ids, jump_limitation);
 }
