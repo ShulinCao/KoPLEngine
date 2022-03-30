@@ -280,12 +280,12 @@ def expand_from(executor, entity_ids, jump_limitation):
 
 
 if __name__ == "__main__":
-#    executor = init("../kb.json")
+    executor = init("../kb.json")
 #    container = test_expannd_from_entities(executor)
 #    for ent in container:
 #        print(ent)
 
-    executor = init("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json")
+#    executor = init("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json")
 
     # programs = json.load(open("kopl_sample.json"))
 

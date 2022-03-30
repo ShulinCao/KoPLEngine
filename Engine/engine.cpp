@@ -1432,8 +1432,7 @@ Engine::expandFromEntities(
     }
 
     subgraph_ptr -> entity_relations.clear();
-    std::cout << subgraph_ptr -> entity_relations.size() << std::endl;
-    std::cout << "here we are\n";
+    
     for (int i = 0; i < subsetOfRelations.size(); ++i) {
         json relations = json::array();
         for (const auto & relation_json : subsetOfRelations.at(i)) {
@@ -1441,7 +1440,6 @@ Engine::expandFromEntities(
         }
         subgraph_ptr -> entity_relations.push_back(relations.dump());
     }
-    std::cout << "here we are, too!\n";
 
     return subgraph_ptr;
 }
@@ -1459,7 +1457,7 @@ void Engine::dfsTraversal(
         visited_index -> insert(entity);
 
         auto entity_id = _entity_id.at(entity);
-        std::cout << entity << " " << entity_id << std::endl;
+        //std::cout << entity << " " << entity_id << std::endl;
         subgraph_ptr -> entity_ids.push_back(entity_id);
         const auto & attributes = serialStringsOfAttributes.at(entity);
         subgraph_ptr -> entity_attributes.push_back(attributes);
