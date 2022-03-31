@@ -639,9 +639,9 @@ std::shared_ptr<Engine::EntitiesWithFacts> Engine::findLinking(const std::string
         }else{
             s += find_entity_name[i];
         }
-        if (_entity_id_to_number.find(s) != _entity_id_to_number.end()) {
-            res_ptr -> first ->push_back(_entity_id_to_number.at(s));
-        }
+    }
+    if (_entity_id_to_number.find(s) != _entity_id_to_number.end()) {
+        res_ptr -> first ->push_back(_entity_id_to_number.at(s));
     }
     return res_ptr;
 }
