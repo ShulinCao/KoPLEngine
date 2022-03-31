@@ -61,8 +61,10 @@ private:
     // TODO: complete this function
     static std::string _obtain_result(const std::shared_ptr<Engine::GraphContainer> & graph_container) {
         std::string s = "";
+        std::cout << graph_container -> entity_ids.size() << std::endl;
         for (auto i = 0; i < graph_container -> entity_ids.size(); ++i){
             s = s + graph_container -> entity_ids[i] + "\t\t" + graph_container -> entity_relations[i] + "\t\t" + graph_container -> entity_attributes[i];
+//            s = s + graph_container -> entity_ids[i] + "\t\t";
             s = s + "\n";
         }
         return s;

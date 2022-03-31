@@ -448,7 +448,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
 
                 auto function_res = executor_engine -> expandFromEntities(
-                        dependency_a
+                        dependency_a, 1
                 );
 
                 // Answer

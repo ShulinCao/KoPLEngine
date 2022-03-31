@@ -1469,7 +1469,7 @@ void Engine::dfsTraversal(
         std::vector<std::vector<json>> & subsetOfRelations,
         std::shared_ptr<std::set<int>> & visited_index,
         std::shared_ptr<GraphContainer> & subgraph_ptr) const {
-    if (visited_index -> find(entity) == visited_index -> end()) {
+    if (visited_index -> find(entity) == visited_index -> end() && visited_index -> size() < 800 ) {
         visited_index -> insert(entity);
 
         auto entity_id = _entity_id.at(entity);
