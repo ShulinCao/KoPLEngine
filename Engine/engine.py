@@ -293,7 +293,7 @@ if __name__ == "__main__":
 
     programs = [
         # [{"function": "FindAll", "inputs": [], "dependencies": [-1, -1]}, {"function": "FilterYear", "inputs": ["publication date", "1990", "="], "dependencies": [0, -1]}, {"function": "FilterConcept", "inputs": ["feature film"], "dependencies": [1, -1]}, {"function": "SelectAmong", "inputs": ["duration", "largest"], "dependencies": [2, -1]}],
-        [{'function': 'FindLinking', 'inputs': ["Q31"], "dependencies": [-1, -1]}, {"function": 'QueryNeighbor', 'inputs': [], "dependencies": [0, -1]}],
+        [{'function': 'FindLinking', 'inputs': ["Q191477 Q29319614"], "dependencies": [-1, -1]}, {"function": 'QueryNeighbor', 'inputs': [], "dependencies": [0, -1]}],
     ]
     programs = [{"program": x, "answer": "n/a"} for x in programs]
 
@@ -311,7 +311,7 @@ if __name__ == "__main__":
 
         pred = forward(executor, prog, True)
         if (ansr != pred):
-            # print(i, ansr, pred)
+            print(i, ansr, pred)
             error_num += 1
 
     print(error_num / total_num)
