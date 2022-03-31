@@ -1432,27 +1432,35 @@ Engine::expandFromEntities(
         visited_index -> insert(ent);
         subgraph_ptr -> entity_ids.push_back(_entity_id.at(ent));
         subgraph_ptr -> entity_attributes.push_back(serialStringsOfAttributes.at(ent));
-        subgraph_ptr -> entity_relations.push_back("[]");
-        subsetOfRelations.emplace_back();
-        entityToIndex[ent] = subsetOfRelations.size() - 1;
+//        subgraph_ptr -> entity_relations.push_back("[]");
+//        subsetOfRelations.emplace_back();
+//        entityToIndex[ent] = subsetOfRelations.size() - 1;
     }
 
-    if (jump_limitation <= 0) {
-        return subgraph_ptr;
-    }
+//    if (jump_limitation <= 0) {
+//        return subgraph_ptr;
+//    }
+
+//    for (int i = 0; i < entities.size(); ++i) {
+//        for (const auto & relation : _entity_relation.at(entities[i])) {
+//            dfsTraversal(relation -> relation_tail_entity, entities[i], entityToIndex, jump_limitation, 1, subsetOfRelations, visited_index, subgraph_ptr);
+//        }
+//    }
+//
+//    subgraph_ptr -> entity_relations.clear();
+//
+//    for (int i = 0; i < subsetOfRelations.size(); ++i) {
+//        json relations = json::array();
+//        for (const auto & relation_json : subsetOfRelations.at(i)) {
+//            relations.push_back(relation_json);
+//        }
+//        subgraph_ptr -> entity_relations.push_back(relations.dump());
+//    }
 
     for (int i = 0; i < entities.size(); ++i) {
-        for (const auto & relation : _entity_relation.at(entities[i])) {
-            dfsTraversal(relation -> relation_tail_entity, entities[i], entityToIndex, jump_limitation, 1, subsetOfRelations, visited_index, subgraph_ptr);
-        }
-    }
-
-    subgraph_ptr -> entity_relations.clear();
-    
-    for (int i = 0; i < subsetOfRelations.size(); ++i) {
         json relations = json::array();
-        for (const auto & relation_json : subsetOfRelations.at(i)) {
-            relations.push_back(relation_json);
+        for (const auto & relation : _entity_relation.at(entities[i])) {
+            relations.push_back(jsonsOfRelations.at(entities[i]).at(relation -> relation_tail_entity));
         }
         subgraph_ptr -> entity_relations.push_back(relations.dump());
     }
