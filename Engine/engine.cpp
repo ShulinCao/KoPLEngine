@@ -100,6 +100,7 @@ void Engine::_addFindAllFilterIndex(
 
 Engine::Engine(std::string & kb_file_name, int worker_num) {
     _worker_num = worker_num;
+    max_neighbor = 32;
 
     std::cout << "Initiate a new KB reading from \"" + kb_file_name + "\"" << std::endl;
     json kb;
@@ -249,7 +250,13 @@ Engine::Engine(std::string & kb_file_name, int worker_num) {
             ent_attrs[attribute_key].push_back(attribute);
         }
         _entity_attribute.push_back( ent_attrs );
-        serialStringsOfAttributes.push_back( entity.value().at("attributes").dump() );
+
+        auto max_attribute_num = entity.value().at("attributes").size() > max_neighbor ? max_neighbor : entity.value().at("attributes").size();
+        auto limit_attributes = json::array();
+        for (unsigned long i = 0; i < max_attribute_num; i++) {
+            limit_attributes.push_back(entity.value().at("attributes").at(i));
+        }
+        serialStringsOfAttributes.push_back( limit_attributes.dump() );
     }
 
     // Construct "_entity_relation"
@@ -1459,7 +1466,12 @@ Engine::expandFromEntities(
 
     for (int i = 0; i < entities.size(); ++i) {
         json relations = json::array();
+        int num = 0;
         for (const auto & relation : _entity_relation.at(entities[i])) {
+            if (num > max_neighbor){
+                break;
+            }
+            num += 1;
             relations.push_back(jsonsOfRelations.at(entities[i]).at(relation -> relation_tail_entity));
         }
         subgraph_ptr -> entity_relations.push_back(relations.dump());

@@ -129,6 +129,7 @@ public:
 private:
 
     int                                                                         _worker_num;
+    int                                                                         max_neighbor;
 
     // Concept Name
     std::vector<std::string>                                                    _concept_name;

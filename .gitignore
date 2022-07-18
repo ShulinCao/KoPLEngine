@@ -58,6 +58,7 @@ Engine/cmake-build-saberrelease
 Engine/cmake-build-debug
 Engine/cmake-build-saber
 Engine/cmake-build-remote19
+Engine/cmake-build-lab_19
 Engine/cmake-build-remote25
 *.DS_Store
 .idea
