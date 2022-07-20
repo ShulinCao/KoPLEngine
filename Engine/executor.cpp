@@ -13,7 +13,8 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
     for (int & x : entity_with_fact_indicator)     x = 0;
     for (int & x : value_indicator)                x = 0;
 
-    std::string             answer;
+    std::string                 answer;
+    std::vector<std::string>    inner_return_contents;
 
     try {
         for (std::size_t i = 0; i < program -> size(); i++) {
@@ -37,6 +38,8 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
             // 4. Save Answer   (optional)
 
             if (cur_function.function_name == "FindAll") {
+                // inner contents for findall function
+                inner_return_contents.emplace_back("");
                 if (i < program -> size() - 1 && (*program)[i + 1].function_name == "FilterStr") {
                     (*program)[i + 1].function_name = "FindAllFilterStr";
                     continue;
@@ -68,12 +71,14 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FindLinking") {
                 auto function_res = executor_engine -> findLinking(cur_function.function_args[0]);
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FilterConcept") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -91,6 +96,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FindAllFilterConcept") {
                 auto function_res = executor_engine -> findAllFilterConcept(
@@ -99,6 +105,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FilterStr") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -117,6 +124,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FindAllFilterStr") {
                 auto function_res = executor_engine -> findAllFilterStr(
@@ -126,6 +134,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FilterNum") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -145,6 +154,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FindAllFilterNum") {
                 auto function_res = executor_engine -> findAllFilterNum(
@@ -155,6 +165,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FilterYear") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -193,6 +204,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FindAllFilterYear") {
                 auto function_res = executor_engine -> findAllFilterYear(
@@ -222,6 +234,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FilterDate") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -241,6 +254,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "FindAllFilterDate") {
                 auto function_res = executor_engine -> findAllFilterDate(
@@ -251,6 +265,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "QFilterStr") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -269,6 +284,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "QFilterNum") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -288,6 +304,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "QFilterYear") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -307,6 +324,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "QFilterDate") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -326,6 +344,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "Relate") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -344,6 +363,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "And") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -366,6 +386,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "Or") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -388,6 +409,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 entity_with_fact_buffer[i] = function_res;
                 entity_with_fact_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "What") { // Query Name
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -408,6 +430,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 else {
                     answer = *((*function_res)[0]);
                 }
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "Count") {
                 if (!entity_with_fact_indicator[cur_function.dependencies[0]]) {
@@ -420,6 +443,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 auto function_res = executor_engine -> countOp(
                         dependency_a
                 );
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
 
                 // Answer
                 answer = _obtain_result(function_res);
@@ -443,6 +467,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 else {
                     answer = _obtain_result((*function_res)[0]);
                 }
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "QueryNeighbor") {
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
@@ -458,6 +483,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 else {
                     answer = _obtain_result(function_res);
                 }
+                inner_return_contents.push_back("");
             }
             else if (cur_function.function_name == "QueryAttrUnderCondition") {
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
@@ -472,6 +498,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
 
                 value_buffer[i] = function_res;
                 value_indicator[i] = 1;
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "QueryRelation") {
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
@@ -489,6 +516,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 else {
                     answer = *((*function_res)[0]);
                 }
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "SelectBetween") {
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
@@ -509,6 +537,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 else {
                     answer = *((*function_res)[0]);
                 }
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "SelectAmong") {
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
@@ -527,7 +556,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 else {
                     answer = *((*function_res)[0]);
                 }
-
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "VerifyStr") {
                 auto dependency_a = value_buffer[cur_function.dependencies[0]];
@@ -539,6 +568,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 );
 
                 answer = _obtain_result(function_res);
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "VerifyNum") {
                 auto dependency_a = value_buffer[cur_function.dependencies[0]];
@@ -551,6 +581,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 );
 
                 answer = _obtain_result(function_res);
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "VerifyYear") {
                 auto dependency_a = value_buffer[cur_function.dependencies[0]];
@@ -563,6 +594,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 );
 
                 answer = _obtain_result(function_res);
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "VerifyDate") {
                 auto dependency_a = value_buffer[cur_function.dependencies[0]];
@@ -575,6 +607,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 );
 
                 answer = _obtain_result(function_res);
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "QueryAttrQualifier") {
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
@@ -595,6 +628,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 else {
                     answer = _obtain_result((*function_res)[0]);
                 }
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else if (cur_function.function_name == "QueryRelationQualifier") {
                 auto dependency_a = entity_with_fact_buffer[cur_function.dependencies[0]];
@@ -616,6 +650,7 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
                 else {
                     answer = _obtain_result((*function_res)[0]);
                 }
+                inner_return_contents.push_back(Executor::_inner_contents(function_res, executor_engine));
             }
             else {
                 answer = "Unsupported Operator!";
@@ -624,9 +659,15 @@ std::string Executor::execute_program(std::vector<Function> * program, bool trac
         }
     }
     catch (const std::out_of_range & oor) {
-        std::cerr << "Out of Range error: " << oor.what() << '\n';
+        std::cerr << "Out of Range error: " << oor.what() << "\n";
         answer = "Not Found in KB";
     }
 
-    return answer;
+    json content;
+    content["answer"] = answer;
+    content["inner_content"] = json::array();
+    for (const auto& x : inner_return_contents){
+        content["inner_content"].push_back(x);
+    }
+    return content.dump();
 }

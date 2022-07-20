@@ -197,7 +197,8 @@ bool QuantityValue::operator!=(const QuantityValue & compare_value) const {
 
 int QuantityValue::_floatPoint(double num) const {
     num = std::abs(num);
-    num = num - int(num);
+    auto tmp = long(num);
+    num = num - long(num);
     for (int i = 0; i < 20; i++) {
         num *= 10;
         if (std::abs(num -  round(num)) < 1e-4) {
@@ -209,47 +210,49 @@ int QuantityValue::_floatPoint(double num) const {
 std::string QuantityValue::toPrintStr() const {
     char quant_str[200];
     if (type == float_type) {
-        int float_point = _floatPoint(value);
-        if (float_point == 1) {
-            if (unit != "1")    sprintf(quant_str, "%.1lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.1lf", value);
-        }
-        else if (float_point == 2) {
-            if (unit != "1")    sprintf(quant_str, "%.2lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.2lf", value);
-        }
-        else if (float_point == 3) {
-            if (unit != "1")    sprintf(quant_str, "%.3lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.3lf", value);
-        }
-        else if (float_point == 4) {
-            if (unit != "1")    sprintf(quant_str, "%.4lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.4lf", value);
-        }
-        else if (float_point == 5) {
-            if (unit != "1")    sprintf(quant_str, "%.5lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.5lf", value);
-        }
-        else if (float_point == 6) {
-            if (unit != "1")    sprintf(quant_str, "%.6lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.6lf", value);
-        }
-        else if (float_point == 7) {
-            if (unit != "1")    sprintf(quant_str, "%.7lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.7lf", value);
-        }
-        else if (float_point == 8) {
-            if (unit != "1")    sprintf(quant_str, "%.8lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.8lf", value);
-        }
-        else if (float_point == 9) {
-            if (unit != "1")    sprintf(quant_str, "%.9lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.9lf", value);
-        }
-        else if (float_point == 10) {
-            if (unit != "1")    sprintf(quant_str, "%.10lf %s", value, unit.c_str());
-            else                sprintf(quant_str, "%.10lf", value);
-        }
+//        int float_point = _floatPoint(value);
+//        if (float_point == 1) {
+//            if (unit != "1")    sprintf(quant_str, "%.1lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.1lf", value);
+//        }
+//        else if (float_point == 2) {
+//            if (unit != "1")    sprintf(quant_str, "%.2lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.2lf", value);
+//        }
+//        else if (float_point == 3) {
+//            if (unit != "1")    sprintf(quant_str, "%.3lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.3lf", value);
+//        }
+//        else if (float_point == 4) {
+//            if (unit != "1")    sprintf(quant_str, "%.4lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.4lf", value);
+//        }
+//        else if (float_point == 5) {
+//            if (unit != "1")    sprintf(quant_str, "%.5lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.5lf", value);
+//        }
+//        else if (float_point == 6) {
+//            if (unit != "1")    sprintf(quant_str, "%.6lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.6lf", value);
+//        }
+//        else if (float_point == 7) {
+//            if (unit != "1")    sprintf(quant_str, "%.7lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.7lf", value);
+//        }
+//        else if (float_point == 8) {
+//            if (unit != "1")    sprintf(quant_str, "%.8lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.8lf", value);
+//        }
+//        else if (float_point == 9) {
+//            if (unit != "1")    sprintf(quant_str, "%.9lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.9lf", value);
+//        }
+//        else if (float_point == 10) {
+//            if (unit != "1")    sprintf(quant_str, "%.10lf %s", value, unit.c_str());
+//            else                sprintf(quant_str, "%.10lf", value);
+//        }
+        sprintf(quant_str, "%s %s", std::to_string(value).c_str(), unit.c_str());
+//        std::cout << quant_str << std::endl;
     }
     else if (type == int_type) {
         if (unit != "1")    sprintf(quant_str, "%lld %s", (long long)(value), unit.c_str());

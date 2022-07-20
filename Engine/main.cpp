@@ -7,8 +7,8 @@
 int main() {
     std::cout << "Begin of Debug Program!" << std::endl;
 
-//    std::string file_name("../kb.json");
-    std::string file_name("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json");
+    std::string file_name("../kb.json");
+//    std::string file_name("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json");
 //    std::string file_name("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final.json");
 
     auto executor = Executor(file_name, 4);

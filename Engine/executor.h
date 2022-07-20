@@ -3,6 +3,9 @@
 
 #include "engine.h"
 
+using json = nlohmann::json;
+
+const int MAX_INNER_CONTENT_NUM = 3;
 
 class Function {
 public:
@@ -70,9 +73,146 @@ private:
         return s;
     }
 
+    static std::string _inner_contents_relation(const std::shared_ptr<Engine::EntitiesWithFacts> & entities_with_facts, std::shared_ptr<Engine> executor_engine){
+        int max_num = entities_with_facts->first->size() > MAX_INNER_CONTENT_NUM ? MAX_INNER_CONTENT_NUM : entities_with_facts->first->size();
+        json entities_with_facts_array = json::array();
+        for (int i = 0; i < max_num; ++i){
+            json content;
+            auto entities = *(entities_with_facts->first);
+            auto facts = entities_with_facts->second;
+
+            auto entity_id = entities[i];
+            content["entity_label"] = executor_engine -> get_entity_name(entity_id);
+
+            if (facts == nullptr || facts->empty()){
+                entities_with_facts_array.push_back(content);
+                continue;
+            }
+            auto fact = std::static_pointer_cast<const Relation>((*facts)[i]);
+            content["relation_label"] = fact -> relation_name;
+            content["relation_direction"] = fact -> relation_direction == RelationDirection::forward ? "forward" : "backward";
+            content["tail_entity"] = executor_engine -> get_entity_name(fact -> relation_tail_entity);
+            content["qualifiers"] = json::array();
+
+            auto fact_qualifiers = fact -> fact_qualifiers;
+            auto num1 = 0;
+            for (auto &kv_pair : fact_qualifiers) {
+                num1 += 1;
+                if (num1 > MAX_INNER_CONTENT_NUM){
+                    break;
+                }
+                json qualifier;
+                qualifier["key"] = kv_pair.first;
+                json vals = json::array();
+
+                auto num2 = 0;
+                for (auto val_ptr : kv_pair.second) {
+                    num2 += 1;
+                    if (num2 > MAX_INNER_CONTENT_NUM){
+                        break;
+                    }
+                    vals.push_back(val_ptr->toPrintStr());
+                }
+                qualifier["vals"] = vals;
+                content["qualifiers"].push_back(qualifier);
+            }
+            entities_with_facts_array.push_back(content);
+        }
+        return entities_with_facts_array.dump();
+    }
+
+    static std::string _inner_contents(const std::shared_ptr<Engine::EntitiesWithFacts> & entities_with_facts, std::shared_ptr<Engine> executor_engine) {
+        if (entities_with_facts == nullptr){
+            return "";
+        }
+        if (entities_with_facts -> second == nullptr || entities_with_facts -> second -> size() == 0 || entities_with_facts -> second -> at(0) -> fact_class == FactClass::relation){
+            return Executor::_inner_contents_relation(entities_with_facts, executor_engine);
+        }
+        int max_num = entities_with_facts->first->size() > MAX_INNER_CONTENT_NUM ? MAX_INNER_CONTENT_NUM : entities_with_facts->first->size();
+        json entities_with_facts_array = json::array();
+        for (int i = 0; i < max_num; ++i){
+            json content;
+            auto entities = *(entities_with_facts->first);
+            auto facts = entities_with_facts->second;
+
+            auto entity_id = entities[i];
+            auto temp = executor_engine -> get_entity_name(entity_id);
+            content["entity_label"] = executor_engine -> get_entity_name(entity_id);
+
+            if (facts == nullptr || facts->empty()){
+                entities_with_facts_array.push_back(content);
+                continue;
+            }
+            auto fact = std::static_pointer_cast<const Attribute>((*facts)[i]);
+            content["attribute_value"] = fact -> attribute_value -> toPrintStr();
+            content["qualifiers"] = json::array();
+
+            auto fact_qualifiers = fact -> fact_qualifiers;
+            auto num1 = 0;
+            for (auto &kv_pair : fact_qualifiers) {
+                num1 += 1;
+                if (num1 > MAX_INNER_CONTENT_NUM){
+                    break;
+                }
+                json qualifier;
+                qualifier["key"] = kv_pair.first;
+                json vals = json::array();
+
+                auto num2 = 0;
+                for (auto val_ptr : kv_pair.second) {
+                    num2 += 1;
+                    if (num2 > MAX_INNER_CONTENT_NUM){
+                        break;
+                    }
+                    vals.push_back(val_ptr->toPrintStr());
+                }
+                qualifier["vals"] = vals;
+                content["qualifiers"].push_back(qualifier);
+            }
+            entities_with_facts_array.push_back(content);
+        }
+        return entities_with_facts_array.dump();
+    }
+
+    static std::string _inner_contents(std::shared_ptr<std::vector<const std::string* >> names, std::shared_ptr<Engine> executor_engine){
+        json content;
+        content["content"] = json::array();
+        for (const auto& name : *names){
+            content["content"].push_back(*name);
+        }
+        return content.dump();
+    }
+
+    static std::string _inner_contents(int num, std::shared_ptr<Engine> executor_engine){
+        json content;
+        content["content"] = std::to_string(num);
+        return content.dump();
+    }
+
+    static std::string _inner_contents(std::shared_ptr<Engine::Values> values, std::shared_ptr<Engine> executor_engine){
+        json content;
+        content["content"] = json::array();
+        for (const auto& value : *values){
+            auto xx = value -> toPrintStr();
+            content["content"].push_back(value -> toPrintStr());
+        }
+        return content.dump();
+    }
+
+    static std::string _inner_contents(VerifyResult verify_result, std::shared_ptr<Engine> executor_engine){
+        json content;
+        if (verify_result == VerifyResult::yes){
+            content["content"] = "yes";
+        }else if (verify_result == VerifyResult::no){
+            content["content"] = "no";
+        }else{
+            content["content"] = "not sure";
+        }
+        return content.dump();
+    }
+
 public:
     std::string execute_program(std::vector<Function> * program, bool trace = false);
 };
-
 
 #endif //KOPL_EXECUTOR_H

@@ -5,8 +5,8 @@ import faulthandler
 faulthandler.enable()
 from tqdm import  tqdm
 
-lib = cdll.LoadLibrary('cmake-build-remote19/libKoPL.so')
-# lib = cdll.LoadLibrary('cmake-build-debug/libKoPL.dylib')
+lib = cdll.LoadLibrary('cmake-build-lab_19/libKoPL.so')
+# lib = cdll.LoadLibrary('cmake-build-laptopdebug/libKoPL.dylib')
 # lib = cdll.LoadLibrary('../build/libKoPL.so')
 
 lib.new_char_p.restype = c_void_p
@@ -280,28 +280,31 @@ def parse_program(prog : dict):
 
 
 if __name__ == "__main__":
-    executor = init("./kb.json")
+    # executor = init("./kb.json")
 #    container = test_expannd_from_entities(executor)
 #    for ent in container:
 #        print(ent)
 
-#    executor = init("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json")
+    # executor = init("/data/lvxin/kopl/KoPL/src/en_zh_wikipedia_entities_with_concept_filter_final_with_kqa_kb_with_reverse.json")
+    executor = init("/data/yzj/kopl_service/schema/large/large.json")
 
     # programs = json.load(open("kopl_sample.json"))
 
     programs = json.load(open("./kopl.json"))
 
-    programs = [
-        # [{"function": "FindAll", "inputs": [], "dependencies": [-1, -1]}, {"function": "FilterYear", "inputs": ["publication date", "1990", "="], "dependencies": [0, -1]}, {"function": "FilterConcept", "inputs": ["feature film"], "dependencies": [1, -1]}, {"function": "SelectAmong", "inputs": ["duration", "largest"], "dependencies": [2, -1]}],
-        [{'function': 'FindLinking', 'inputs': ["Q191477 Q29319614"], "dependencies": [-1, -1]}, {"function": 'QueryNeighbor', 'inputs': [], "dependencies": [0, -1]}],
-    ]
-    programs = [{"program": x, "answer": "n/a"} for x in programs]
+    # programs = [
+    #     [{"function": "FindAll", "dependencies": [], "inputs": []}, {"function": "FilterStr", "dependencies": [0], "inputs": ["TOID", "4000000074573917"]}, {"function": "FilterConcept", "dependencies": [1], "inputs": ["town"]}, {"function": "FindAll", "dependencies": [], "inputs": []}, {"function": "FilterStr", "dependencies": [3], "inputs": ["OS grid reference", "SP8778"]}, {"function": "FilterConcept", "dependencies": [4], "inputs": ["town"]}, {"function": "And", "dependencies": [2, 5], "inputs": []}, {"function": "What", "dependencies": [6], "inputs": []}]
+    #     # [{"function": "FindAll", "inputs": [], "dependencies": [-1, -1]}, {"function": "FilterYear", "inputs": ["publication date", "1990", "="], "dependencies": [0, -1]}, {"function": "FilterConcept", "inputs": ["feature film"], "dependencies": [1, -1]}, {"function": "SelectAmong", "inputs": ["duration", "largest"], "dependencies": [2, -1]}],
+    #     # [{'function': 'FindLinking', 'inputs': ["Q191477 Q29319614"], "dependencies": [-1, -1]}, {"function": 'QueryNeighbor', 'inputs': [], "dependencies": [0, -1]}],
+    # ]
+    programs = [{"program": x['program'], "answer": "n/a"} for x in programs]
 
 
     functions = []
 
     s = time.time()
     total_num = error_num = 0
+    f = open('predict.txt', 'w')
     for i in tqdm(range(len(programs))):
         total_num += 1
     # for i in range(len(programs)):
@@ -313,6 +316,8 @@ if __name__ == "__main__":
         if (ansr != pred):
             print(i, ansr, pred)
             error_num += 1
+        f.write("{}\n".format(pred))
+    f.close()
 
     print(error_num / total_num)
 

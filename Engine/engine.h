@@ -35,10 +35,21 @@ enum SelectOperator{
     largest
 };
 
+enum FactClass{
+    base,
+    attribute,
+    relation
+};
+
 
 class Fact {
 public:
     Qualifiers                                                  fact_qualifiers;
+    FactClass                                                  fact_class;
+
+    Fact(){
+        fact_class = FactClass::base;
+    }
     
     ~Fact() {
         for (auto &kv_pair : fact_qualifiers) {
@@ -54,6 +65,10 @@ class Attribute : public Fact {
 public:
     std::shared_ptr<BaseValue>                                  attribute_value;
 //    Qualifiers                                                  fact_qualifiers;
+
+    Attribute(){
+        fact_class = FactClass::attribute;
+    }
 };
 
 
@@ -63,6 +78,10 @@ public:
     RelationDirection                                           relation_direction;
     int                                                         relation_tail_entity;
 //    Qualifiers                                                  fact_qualifiers;
+
+    Relation(){
+        fact_class = FactClass::relation;
+    }
 };
 
 
@@ -239,6 +258,10 @@ public:
 
     void programExec(std::string program) const;
     void programBatchExec(std::vector<std::string> programs) const;
+
+    std::string get_entity_name(const int idx){
+        return _entity_name[idx];
+    }
 
     // Operators
 
